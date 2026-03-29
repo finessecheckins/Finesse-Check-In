@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finesse Construction — Weekly Check-In</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:       #1B2A4A;
+    --navy-dark:  #111d34;
+    --navy-mid:   #243661;
+    --sky:        #5BB8E8;
+    --sky-light:  #8dd0f2;
+    --sky-dark:   #3a9fd4;
+    --white:      #ffffff;
+    --offwhite:   #f4f7fb;
+    --gray:       #8898aa;
+    --light-gray: #c8d3e0;
+    --border:     #d0dcea;
+    --input-bg:   #f4f7fb;
+    --text:       #1B2A4A;
+    --text-light: #4a5f7a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--offwhite); color: var(--text); font-family: 'Open Sans', sans-serif; min-height: 100vh; padding-bottom: 60px; }
+
+  .header { background: var(--navy); padding: 0 20px; display: flex; align-items: center; justify-content: space-between; min-height: 70px; border-bottom: 3px solid var(--sky); }
+  .header-logo { height: 50px; width: auto; display: block; }
+  .header-right { text-align: right; }
+  .header-right h1 { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 2px; color: var(--white); text-transform: uppercase; line-height: 1; }
+  .header-right p { font-size: 10px; color: var(--sky-light); letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
+
+  .progress-wrap { background: var(--navy); padding: 10px 20px 14px; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 10px; color: var(--sky-light); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; font-family: 'Montserrat', sans-serif; font-weight: 600; }
+  .progress-track { height: 3px; background: var(--navy-mid); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--sky-dark), var(--sky-light)); border-radius: 3px; transition: width 0.4s ease; width: 0%; }
+
+  .form-wrap { padding: 20px 16px 0; max-width: 640px; margin: 0 auto; }
+
+  .section-label { display: flex; align-items: center; gap: 10px; margin: 28px 0 12px; }
+  .section-diamond { width: 24px; height: 24px; background: var(--sky); transform: rotate(45deg); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .section-num-inner { transform: rotate(-45deg); font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 9px; color: var(--white); }
+  .section-title { font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 700; color: var(--navy); letter-spacing: 2px; text-transform: uppercase; }
+  .section-line { flex: 1; height: 1px; background: var(--border); }
+
+  .card { background: var(--white); border-radius: 8px; padding: 18px 16px; box-shadow: 0 1px 4px rgba(27,42,74,0.07); border: 1px solid var(--border); margin-bottom: 10px; }
+
+  .field { margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+  label { display: block; font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 700; color: var(--text-light); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 7px; }
+  label .req { color: var(--sky-dark); margin-left: 2px; }
+
+  input[type="text"], input[type="date"], textarea, select {
+    width: 100%; background: var(--input-bg); border: 1.5px solid var(--border); color: var(--text);
+    font-family: 'Open Sans', sans-serif; font-size: 15px; padding: 12px 14px; border-radius: 6px;
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s; -webkit-appearance: none; appearance: none;
+  }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238898aa' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; cursor: pointer; }
+  select:focus { border-color: var(--sky); background-color: var(--white); box-shadow: 0 0 0 3px rgba(91,184,232,0.15); }
+  input[type="date"] { background: #e4eaf4; color: var(--text-light); font-weight: 600; pointer-events: none; }
+  input[type="date"]::-webkit-calendar-picker-indicator { display: none; }
+  input[type="text"]:focus, textarea:focus { border-color: var(--sky); background: var(--white); box-shadow: 0 0 0 3px rgba(91,184,232,0.15); }
+  input::placeholder, textarea::placeholder { color: var(--light-gray); font-size: 13px; }
+  textarea { resize: vertical; min-height: 88px; line-height: 1.6; }
+  .date-note { font-size: 11px; color: var(--gray); margin-top: 5px; }
+
+  .toggle-group { display: flex; gap: 8px; }
+  .toggle-group input[type="radio"] { display: none; }
+  .toggle-group label { margin: 0; padding: 11px 32px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 12px; font-weight: 700; color: var(--gray); cursor: pointer; transition: all 0.15s; letter-spacing: 1.5px; background: var(--input-bg); text-transform: uppercase; }
+  .toggle-group input[type="radio"]:checked + label { border-color: var(--sky); color: var(--navy); background: rgba(91,184,232,0.1); }
+
+  .conditional { margin-top: 10px; display: none; }
+  .conditional.visible { display: block; }
+
+  .error-msg { color: #c0392b; font-size: 11px; font-weight: 600; margin-top: 5px; display: none; }
+  .field.has-error input[type="text"], .field.has-error textarea { border-color: #c0392b; background: #fff8f8; }
+  .field.has-error .error-msg { display: block; }
+
+  .submit-wrap { max-width: 640px; margin: 32px auto 0; padding: 24px 16px 0; border-top: 1px solid var(--border); }
+  .submit-btn { width: 100%; background: linear-gradient(135deg, var(--navy-mid), var(--navy)); color: var(--white); border: none; font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; padding: 18px; border-radius: 8px; cursor: pointer; transition: opacity 0.2s, transform 0.1s; box-shadow: 0 4px 14px rgba(27,42,74,0.25); }
+  .submit-btn:hover { opacity: 0.91; }
+  .submit-btn:active { transform: scale(0.99); }
+  .submit-note { text-align: center; font-size: 11px; color: var(--gray); margin-top: 10px; }
+
+  .success-screen { display: none; padding: 60px 24px; text-align: center; max-width: 400px; margin: 0 auto; }
+  .success-icon { width: 72px; height: 72px; background: rgba(91,184,232,0.1); border: 2px solid var(--sky); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 30px; color: var(--sky-dark); }
+  .success-screen h2 { font-family: 'Montserrat', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: 2px; color: var(--navy); text-transform: uppercase; margin-bottom: 12px; }
+  .success-screen p { font-size: 14px; color: var(--text-light); line-height: 1.7; }
+
+  .sending-overlay { display: none; position: fixed; inset: 0; background: rgba(27,42,74,0.75); z-index: 200; align-items: center; justify-content: center; flex-direction: column; gap: 16px; }
+  .sending-overlay.active { display: flex; }
+  .spinner { width: 44px; height: 44px; border: 3px solid rgba(91,184,232,0.3); border-top-color: var(--sky); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .sending-text { font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--white); }
+  .footer { text-align: center; padding: 32px 24px 0; font-size: 11px; color: var(--light-gray); }
+
+  /* ── LOGIN SCREEN ── */
+  .login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 73px); padding: 32px 20px; }
+  .login-card { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 36px 28px; width: 100%; max-width: 360px; box-shadow: 0 4px 20px rgba(27,42,74,0.10); }
+  .login-card h2 { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 16px; color: var(--navy); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; text-align: center; }
+  .login-card p { font-size: 12px; color: var(--gray); text-align: center; margin-bottom: 28px; }
+  .login-field { margin-bottom: 16px; }
+  .login-field label { display: block; font-size: 11px; font-weight: 600; color: var(--text-light); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .login-field input { width: 100%; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); font-family: 'Open Sans', sans-serif; font-size: 15px; padding: 12px 14px; border-radius: 6px; outline: none; transition: border-color 0.2s; letter-spacing: 1px; }
+  .login-field input:focus { border-color: var(--sky); }
+  .login-field input[type="password"] { letter-spacing: 4px; font-size: 18px; }
+  .login-btn { width: 100%; background: var(--navy); color: var(--white); border: none; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 3px; text-transform: uppercase; padding: 15px; border-radius: 6px; cursor: pointer; margin-top: 8px; transition: background 0.2s; }
+  .login-btn:hover { background: var(--navy-mid); }
+  .login-error { background: #fff0f0; border: 1px solid #f5c6c6; border-radius: 6px; padding: 10px 14px; font-size: 12px; color: #c0392b; text-align: center; margin-top: 14px; display: none; }
+  .login-error.visible { display: block; }
+  .login-attempts { font-size: 11px; color: var(--gray); text-align: center; margin-top: 10px; }
+  .locked-msg { background: #fff5e6; border: 1px solid #f5d9a8; border-radius: 6px; padding: 14px; font-size: 12px; color: #9a6000; text-align: center; margin-top: 14px; display: none; }
+  .locked-msg.visible { display: block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="/" style="text-decoration:none;cursor:pointer;" onclick="location.reload();return false;" aria-label="Refresh page"><svg class="header-logo" viewBox="0 0 320 64" xmlns="http://www.w3.org/2000/svg" aria-label="Finesse Construction LLC">
+    <!-- Diamond 1: left/back, bright blue -->
+    <polygon points="38,4 62,32 38,60 14,32" fill="#5BB8E8" opacity="0.9"/>
+    <!-- Diamond 2: right/front, lighter blue, overlapping -->
+    <polygon points="58,10 78,32 58,54 38,32" fill="#8dd0f2" opacity="0.75"/>
+    <!-- Finesse wordmark: bold italic, white -->
+    <text x="88" y="38" font-family="'Montserrat','Arial Black',sans-serif" font-weight="800" font-size="30" fill="#ffffff" font-style="italic" letter-spacing="-1">Finesse</text>
+    <!-- Construction LLC: spaced caps, sky blue -->
+    <text x="90" y="54" font-family="'Montserrat','Arial',sans-serif" font-weight="600" font-size="9.5" fill="#8dd0f2" letter-spacing="2.5">CONSTRUCTION LLC</text>
+  </svg></a>
+  <div class="header-right">
+    <h1>Weekly Check-In</h1>
+    <p>Field Report</p>
+  </div>
+</div>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" class="login-screen">
+  <div class="login-card">
+    <h2>Field Check-In</h2>
+    <p>Enter your username and PIN to continue.</p>
+    <div class="login-field">
+      <label>Username</label>
+      <input type="text" id="login-username" placeholder="e.g. jsmith" autocomplete="off" autocapitalize="none" spellcheck="false">
+    </div>
+    <div class="login-field">
+      <label>PIN</label>
+      <input type="password" id="login-pin" placeholder="••••" maxlength="6" inputmode="numeric">
+    </div>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-error" id="login-error">Incorrect username or PIN. Please try again.</div>
+    <div class="locked-msg" id="locked-msg">Too many failed attempts. Contact your PM to reset access.</div>
+    <div class="login-attempts" id="login-attempts"></div>
+  </div>
+</div>
+
+<div id="main-content" style="display:none;">
+
+<div class="progress-wrap">
+  <div class="progress-label"><span>Completion</span><span id="prog-pct">0%</span></div>
+  <div class="progress-track"><div class="progress-fill" id="prog-fill"></div></div>
+</div>
+
+<div class="form-wrap" id="form-wrap">
+<form id="checkin-form" novalidate>
+
+  <div class="section-label">
+    <div class="section-diamond"><span class="section-num-inner">01</span></div>
+    <span class="section-title">Identification</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="card">
+    <div class="field" id="f-name">
+      <label>Name <span class="req">*</span></label>
+      <input type="text" name="super_name" placeholder="Your full name">
+      <div class="error-msg">Please enter your name.</div>
+    </div>
+    <div class="field" id="f-job">
+      <label>Job Name / Project <span class="req">*</span></label>
+      <select name="job_name" id="job-select">
+        <option value="">— Select a job —</option>
+        <option value="Palm Canyon">Palm Canyon</option>
+        <option value="Sherman Plaza">Sherman Plaza</option>
+        <option value="Amazing Explorers Queen Creek">Amazing Explorers Queen Creek</option>
+        <option value="Sweetgreens">Sweetgreens</option>
+        <option value="Palo on 75th">Palo on 75th</option>
+        <option value="Other">Other (please specify)</option>
+      </select>
+      <div class="conditional" id="job-other-detail">
+        <input type="text" name="job_name_other" placeholder="Enter job name…" style="margin-top:10px;">
+      </div>
+      <div class="error-msg">Required.</div>
+    </div>
+    <div class="field">
+      <label>Week Ending Date</label>
+      <input type="date" name="week_date" id="week-date-input" readonly>
+      <div class="date-note">Auto-set to current Friday — not editable.</div>
+    </div>
+  </div>
+
+  <div class="section-label">
+    <div class="section-diamond"><span class="section-num-inner">02</span></div>
+    <span class="section-title">Progress</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="card">
+    <div class="field" id="f-completed">
+      <label>Work Completed This Week <span class="req">*</span></label>
+      <textarea name="completed" placeholder="What got done since last Friday?"></textarea>
+      <div class="error-msg">Required.</div>
+    </div>
+    <div class="field" id="f-planned">
+      <label>Work Planned for Next Week <span class="req">*</span></label>
+      <textarea name="planned" placeholder="What's the focus coming up?"></textarea>
+      <div class="error-msg">Required.</div>
+    </div>
+  </div>
+
+  <div class="section-label">
+    <div class="section-diamond"><span class="section-num-inner">03</span></div>
+    <span class="section-title">Site Status</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="card">
+    <div class="field" id="f-manpower">
+      <label>Manpower on Site <span class="req">*</span></label>
+      <input type="text" name="manpower" placeholder="e.g. 4 framers, 2 concrete, 1 foreman">
+      <div class="error-msg">Required.</div>
+    </div>
+    <div class="field" id="f-deliveries">
+      <label>Material Deliveries <span class="req">*</span></label>
+      <textarea name="deliveries" placeholder="Received this week or expected next week?" style="min-height:72px;"></textarea>
+      <div class="error-msg">Required.</div>
+    </div>
+    <div class="field" id="f-delays">
+      <label>Delays or Blockers <span class="req">*</span></label>
+      <textarea name="delays" placeholder="Anything slowing us down or at risk?" style="min-height:72px;"></textarea>
+      <div class="error-msg">Required.</div>
+    </div>
+  </div>
+
+  <div class="section-label">
+    <div class="section-diamond"><span class="section-num-inner">04</span></div>
+    <span class="section-title">Action Required</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="card">
+    <div class="field" id="f-attention">
+      <label>Items Requiring Immediate PM Action <span class="req">*</span></label>
+      <textarea name="attention" placeholder="What needs to be addressed by the PM to keep the job moving?"></textarea>
+      <div class="error-msg">Required.</div>
+    </div>
+  </div>
+
+  <div class="section-label">
+    <div class="section-diamond"><span class="section-num-inner">05</span></div>
+    <span class="section-title">Flags</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="card">
+    <div class="field" id="f-inspections">
+      <label>Any Inspection or Permit Activity? <span class="req">*</span></label>
+      <div class="toggle-group">
+        <input type="radio" name="inspections_flag" id="inspections-no" value="No">
+        <label for="inspections-no">No</label>
+        <input type="radio" name="inspections_flag" id="inspections-yes" value="Yes">
+        <label for="inspections-yes">Yes</label>
+      </div>
+      <div class="conditional" id="inspections-detail">
+        <textarea name="inspections_detail" placeholder="Describe any inspections completed, upcoming, or permit activity to note…" style="min-height:72px; margin-top:10px;"></textarea>
+      </div>
+      <div class="error-msg">Required.</div>
+    </div>
+    <div class="field" style="margin-top:16px;">
+      <label>Any Safety Issues?</label>
+      <div class="toggle-group">
+        <input type="radio" name="safety_flag" id="safety-no" value="No">
+        <label for="safety-no">No</label>
+        <input type="radio" name="safety_flag" id="safety-yes" value="Yes">
+        <label for="safety-yes">Yes</label>
+      </div>
+      <div class="conditional" id="safety-detail">
+        <textarea name="safety_detail" placeholder="Describe the safety issue…" style="min-height:72px; margin-top:10px;"></textarea>
+      </div>
+    </div>
+    <div class="field" style="margin-top:16px;">
+      <label>Any Subcontractor Issues?</label>
+      <div class="toggle-group">
+        <input type="radio" name="sub_flag" id="sub-no" value="No">
+        <label for="sub-no">No</label>
+        <input type="radio" name="sub_flag" id="sub-yes" value="Yes">
+        <label for="sub-yes">Yes</label>
+      </div>
+      <div class="conditional" id="sub-detail">
+        <textarea name="sub_detail" placeholder="Describe the subcontractor issue…" style="min-height:72px; margin-top:10px;"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="submit-wrap">
+    <button type="submit" class="submit-btn">Submit Check-In</button>
+    <p class="submit-note">Your response goes directly to the PM team.</p>
+  </div>
+
+</form>
+</div>
+
+<div class="success-screen" id="success-screen">
+  <div class="success-icon">✓</div>
+  <h2>Submitted</h2>
+  <p>Your check-in has been received by the PM team. Have a good weekend.</p>
+</div>
+
+<div class="sending-overlay" id="sending-overlay">
+  <div class="spinner"></div>
+  <div class="sending-text">Submitting…</div>
+</div>
+
+</div><!-- /main-content -->
+
+<div class="footer" id="footer">Finesse Construction LLC — Internal Use Only</div>
+
+<script>
+  // ── USER CREDENTIALS ─────────────────────────────────────
+  // Format: username: { pin: '####', name: 'Full Name' }
+  const USERS = {
+    'rmiranda':     { pin: '4351', name: 'Robert Miranda' },
+    'smorris':      { pin: '1913', name: 'Steve Morris' },
+    'jgullion':     { pin: '4111', name: 'Joe Gullion' },
+    'dsimon':       { pin: '9210', name: 'Darryl Simon' },
+    'ccostenbader': { pin: '4420', name: 'Cody Costenbader' },
+    'tmerck':       { pin: '1800', name: 'Tony Merck' },
+    'mdesha':       { pin: '9886', name: 'Myles DeSha' },
+    'dwood':        { pin: '4879', name: 'Dennis Wood', defaultJob: 'Sweetgreens' },
+    'kmaki':        { pin: '3461', name: 'Ken Maki', defaultJob: 'Sherman Plaza' },
+    'jhubner':      { pin: '2589', name: 'Josh Hubner', defaultJob: 'Amazing Explorers Queen Creek' },
+    'dgreathouse':  { pin: '3282', name: 'Doug Greathouse', defaultJob: 'Sherman Plaza' },
+    'jowens':       { pin: '1800', name: 'Justin Owens', defaultJob: 'Palo on 75th' },
+  };
+
+  let loginAttempts = 0;
+  const MAX_ATTEMPTS = 5;
+
+  function doLogin() {
+    if (loginAttempts >= MAX_ATTEMPTS) return;
+
+    const username = document.getElementById('login-username').value.trim().toLowerCase();
+    const pin = document.getElementById('login-pin').value.trim();
+    const user = USERS[username];
+
+    if (user && user.pin === pin) {
+      // Success — hide login, show form, pre-fill name
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('main-content').style.display = 'block';
+      const nameInput = document.querySelector('[name="super_name"]');
+      nameInput.value = user.name;
+      nameInput.readOnly = true;
+      nameInput.style.background = '#eef3f9';
+      nameInput.style.color = '#4a5f7a';
+      // Auto-populate job if the super has a default
+      if (user.defaultJob) {
+        const jobSelect = document.getElementById('job-select');
+        jobSelect.value = user.defaultJob;
+        jobSelect.dispatchEvent(new Event('change'));
+      }
+      updateProg();
+    } else {
+      loginAttempts++;
+      document.getElementById('login-error').classList.add('visible');
+      document.getElementById('login-pin').value = '';
+      document.getElementById('login-pin').focus();
+
+      const remaining = MAX_ATTEMPTS - loginAttempts;
+      if (remaining <= 0) {
+        document.getElementById('login-error').classList.remove('visible');
+        document.getElementById('locked-msg').classList.add('visible');
+        document.getElementById('login-btn').disabled = true;
+        document.getElementById('login-btn').style.opacity = '0.4';
+        document.getElementById('login-attempts').textContent = '';
+      } else {
+        document.getElementById('login-attempts').textContent =
+          remaining + ' attempt' + (remaining === 1 ? '' : 's') + ' remaining';
+      }
+    }
+  }
+
+  // Allow Enter key on PIN field
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('login-pin').addEventListener('keydown', e => {
+      if (e.key === 'Enter') doLogin();
+    });
+    document.getElementById('login-username').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('login-pin').focus();
+    });
+  });
+
+  // ── CONFIG ───────────────────────────────────────────────
+  const ENDPOINT = 'https://formspree.io/f/xgopavle';
+  const TO_EMAIL = 'deshamyles@gmail.com';
+
+  // ── AUTO FRIDAY DATE ─────────────────────────────────────
+  (function() {
+    const t = new Date(), d = t.getDay();
+    const f = new Date(t);
+    f.setDate(t.getDate() + (d === 5 ? 0 : (5 - d + 7) % 7));
+    document.getElementById('week-date-input').value = f.toISOString().split('T')[0];
+  })();
+
+  // ── PROGRESS ─────────────────────────────────────────────
+  const form = document.getElementById('checkin-form');
+  const checks = [
+    () => form.querySelector('[name="super_name"]').value.trim(),
+    () => {
+      const sel = form.querySelector('[name="job_name"]').value;
+      if (sel === 'Other') return form.querySelector('[name="job_name_other"]').value.trim();
+      return sel;
+    },
+    () => form.querySelector('[name="completed"]').value.trim(),
+    () => form.querySelector('[name="planned"]').value.trim(),
+    () => form.querySelector('[name="manpower"]').value.trim(),
+    () => form.querySelector('[name="deliveries"]').value.trim(),
+    () => form.querySelector('[name="delays"]').value.trim(),
+    () => form.querySelector('[name="attention"]').value.trim(),
+    () => form.querySelector('[name="inspections_flag"]:checked') ? form.querySelector('[name="inspections_flag"]:checked').value : '',
+  ];
+  function updateProg() {
+    const n = checks.filter(fn => !!fn()).length;
+    const p = Math.round(n / checks.length * 100);
+    document.getElementById('prog-fill').style.width = p + '%';
+    document.getElementById('prog-pct').textContent = p + '%';
+  }
+  form.addEventListener('input', updateProg);
+  form.addEventListener('change', updateProg);
+
+  // ── CONDITIONALS ─────────────────────────────────────────
+  document.getElementById('job-select').addEventListener('change', function() {
+    document.getElementById('job-other-detail').classList.toggle('visible', this.value === 'Other');
+  });
+  document.querySelectorAll('[name="inspections_flag"]').forEach(r =>
+    r.addEventListener('change', () =>
+      document.getElementById('inspections-detail').classList.toggle('visible', r.value === 'Yes' && r.checked)));
+  document.querySelectorAll('[name="safety_flag"]').forEach(r =>
+    r.addEventListener('change', () =>
+      document.getElementById('safety-detail').classList.toggle('visible', r.value === 'Yes' && r.checked)));
+  document.querySelectorAll('[name="sub_flag"]').forEach(r =>
+    r.addEventListener('change', () =>
+      document.getElementById('sub-detail').classList.toggle('visible', r.value === 'Yes' && r.checked)));
+
+  // ── VALIDATE ─────────────────────────────────────────────
+  function validate() {
+    let ok = true;
+    const chk = (id, val) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.toggle('has-error', !val);
+      if (!val) ok = false;
+    };
+    chk('f-name',       form.querySelector('[name="super_name"]').value.trim());
+    chk('f-job',        (() => {
+      const sel = form.querySelector('[name="job_name"]').value;
+      if (sel === 'Other') return form.querySelector('[name="job_name_other"]').value.trim();
+      return sel;
+    })());
+    chk('f-completed',  form.querySelector('[name="completed"]').value.trim());
+    chk('f-planned',    form.querySelector('[name="planned"]').value.trim());
+    chk('f-manpower',   form.querySelector('[name="manpower"]').value.trim());
+    chk('f-deliveries', form.querySelector('[name="deliveries"]').value.trim());
+    chk('f-delays',     form.querySelector('[name="delays"]').value.trim());
+    chk('f-attention',  form.querySelector('[name="attention"]').value.trim());
+    chk('f-inspections', form.querySelector('[name="inspections_flag"]:checked'));
+    return ok;
+  }
+
+  // ── EMAIL BODY ────────────────────────────────────────────
+  function buildBody(d) {
+    const sf = d.get('safety_flag')   || 'Not answered';
+    const sd = d.get('safety_detail') || '—';
+    const uf = d.get('sub_flag')      || 'Not answered';
+    const ud = d.get('sub_detail')    || '—';
+    const inf = d.get('inspections_flag') || 'Not answered';
+    const ind = d.get('inspections_detail') || '—';
+    const jobSel = d.get('job_name');
+    const jobName = jobSel === 'Other' ? (d.get('job_name_other') || 'Other') : jobSel;
+    return `FINESSE CONSTRUCTION — WEEKLY FIELD CHECK-IN
+================================================
+Name           : ${d.get('super_name')}
+Job            : ${jobName}
+Week Ending    : ${d.get('week_date')}
+
+01 — WORK COMPLETED THIS WEEK
+${d.get('completed')}
+
+02 — WORK PLANNED FOR NEXT WEEK
+${d.get('planned')}
+
+03 — MANPOWER ON SITE
+${d.get('manpower')}
+
+04 — MATERIAL DELIVERIES
+${d.get('deliveries')}
+
+05 — DELAYS OR BLOCKERS
+${d.get('delays')}
+
+06 — ITEMS REQUIRING IMMEDIATE PM ACTION
+${d.get('attention')}
+
+07 — INSPECTIONS & PERMIT ACTIVITY
+${inf}${inf==='Yes'?'\nDetail: '+ind:''}
+
+08 — SAFETY ISSUES
+${sf}${sf==='Yes'?'\nDetail: '+sd:''}
+
+09 — SUBCONTRACTOR ISSUES
+${uf}${uf==='Yes'?'\nDetail: '+ud:''}
+
+================================================
+Submitted via Finesse Weekly Check-In`;
+  }
+
+  // ── SUBMIT ────────────────────────────────────────────────
+  function showSuccess() {
+    document.getElementById('form-wrap').style.display   = 'none';
+    document.getElementById('footer').style.display      = 'none';
+    document.querySelector('.progress-wrap').style.display = 'none';
+    document.getElementById('success-screen').style.display = 'block';
+  }
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!validate()) {
+      const el = form.querySelector('.has-error');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    const data = new FormData(form);
+    const sup  = data.get('super_name');
+    const jobSel = data.get('job_name');
+    const job  = jobSel === 'Other' ? (data.get('job_name_other') || 'Other') : jobSel;
+    const dt   = data.get('week_date');
+    const body = buildBody(data);
+    const overlay = document.getElementById('sending-overlay');
+    overlay.classList.add('active');
+    try {
+      const res = await fetch(ENDPOINT, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ _subject: `[${job}] Weekly Check-In — ${sup} — ${dt}`, _replyto: TO_EMAIL, message: body })
+      });
+      overlay.classList.remove('active');
+      res.ok ? showSuccess() : fallback(sup, job, dt, body);
+    } catch {
+      overlay.classList.remove('active');
+      fallback(sup, job, dt, body);
+    }
+  });
+
+  function fallback(sup, job, dt, body) {
+    const s = encodeURIComponent(`[${job}] Weekly Check-In — ${sup} — ${dt}`);
+    const b = encodeURIComponent(body);
+    window.location.href = `mailto:${TO_EMAIL}?subject=${s}&body=${b}`;
+    setTimeout(showSuccess, 1000);
+  }
+</script>
+</body>
+</html>
