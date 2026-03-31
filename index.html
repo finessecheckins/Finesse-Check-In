@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Finesse Construction — Weekly Check-In</title>
+<title>Finesse Construction — Field Check-In</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -128,7 +128,7 @@
     <text x="90" y="54" font-family="'Montserrat','Arial',sans-serif" font-weight="600" font-size="9.5" fill="#8dd0f2" letter-spacing="2.5">CONSTRUCTION LLC</text>
   </svg></a>
   <div class="header-right">
-    <h1>Weekly Check-In</h1>
+    <h1>Field Check-In</h1>
     <p>Field Report</p>
   </div>
 </div>
@@ -190,11 +190,8 @@
       </div>
       <div class="error-msg">Required.</div>
     </div>
-    <div class="field">
-      <label>Week Ending Date</label>
-      <input type="date" name="week_date" id="week-date-input" readonly>
-      <div class="date-note">Auto-set to current Friday — not editable.</div>
-    </div>
+      <input type="hidden" name="today_date" id="today-date-input">
+      <input type="hidden" name="week_date" id="week-date-input">
   </div>
 
   <div class="section-label">
@@ -204,12 +201,12 @@
   </div>
   <div class="card">
     <div class="field" id="f-completed">
-      <label>Work Completed This Week <span class="req">*</span></label>
-      <textarea name="completed" placeholder="What got done since last Friday?"></textarea>
+      <label>Work Completed <span class="req">*</span></label>
+      <textarea name="completed" placeholder="What got done since the last check-in?"></textarea>
       <div class="error-msg">Required.</div>
     </div>
     <div class="field" id="f-planned">
-      <label>Work Planned for Next Week <span class="req">*</span></label>
+      <label>Work Planned <span class="req">*</span></label>
       <textarea name="planned" placeholder="What's the focus coming up?"></textarea>
       <div class="error-msg">Required.</div>
     </div>
@@ -224,11 +221,6 @@
     <div class="field" id="f-manpower">
       <label>Manpower on Site <span class="req">*</span></label>
       <input type="text" name="manpower" placeholder="e.g. 4 framers, 2 concrete, 1 foreman">
-      <div class="error-msg">Required.</div>
-    </div>
-    <div class="field" id="f-deliveries">
-      <label>Material Deliveries <span class="req">*</span></label>
-      <textarea name="deliveries" placeholder="Received this week or expected next week?" style="min-height:72px;"></textarea>
       <div class="error-msg">Required.</div>
     </div>
     <div class="field" id="f-delays">
@@ -283,6 +275,18 @@
       </div>
     </div>
     <div class="field" style="margin-top:16px;">
+      <label>Any Material Deliveries?</label>
+      <div class="toggle-group">
+        <input type="radio" name="deliveries_flag" id="deliveries-no" value="No">
+        <label for="deliveries-no">No</label>
+        <input type="radio" name="deliveries_flag" id="deliveries-yes" value="Yes">
+        <label for="deliveries-yes">Yes</label>
+      </div>
+      <div class="conditional" id="deliveries-detail">
+        <textarea name="deliveries_detail" placeholder="What was received or is expected? Include dates if known…" style="min-height:72px; margin-top:10px;"></textarea>
+      </div>
+    </div>
+    <div class="field" style="margin-top:16px;">
       <label>Any Subcontractor Issues?</label>
       <div class="toggle-group">
         <input type="radio" name="sub_flag" id="sub-no" value="No">
@@ -323,18 +327,18 @@
   // ── USER CREDENTIALS ─────────────────────────────────────
   // Format: username: { pin: '####', name: 'Full Name' }
   const USERS = {
-    'rmiranda':     { pin: '4351', name: 'Robert Miranda' },
-    'smorris':      { pin: '1913', name: 'Steve Morris' },
-    'jgullion':     { pin: '4111', name: 'Joe Gullion' },
-    'dsimon':       { pin: '9210', name: 'Darryl Simon' },
-    'ccostenbader': { pin: '4420', name: 'Cody Costenbader' },
-    'tmerck':       { pin: '1800', name: 'Tony Merck' },
-    'mdesha':       { pin: '9886', name: 'Myles DeSha' },
-    'dwood':        { pin: '4879', name: 'Dennis Wood', defaultJob: 'Sweetgreens' },
-    'kmaki':        { pin: '3461', name: 'Ken Maki', defaultJob: 'Sherman Plaza' },
-    'jhubner':      { pin: '2589', name: 'Josh Hubner', defaultJob: 'Amazing Explorers Queen Creek' },
-    'dgreathouse':  { pin: '3282', name: 'Doug Greathouse', defaultJob: 'Sherman Plaza' },
-    'jowens':       { pin: '1800', name: 'Justin Owens', defaultJob: 'Palo on 75th' },
+    'rmiranda':     { pin: '4351', name: 'Robert Miranda',   email: 'rm@finesseconstruction.com' },
+    'smorris':      { pin: '1913', name: 'Steve Morris',     email: 'sm@finesseconstruction.com' },
+    'jgullion':     { pin: '4111', name: 'Joe Gullion',      email: 'jg@finesseconstruction.com' },
+    'dsimon':       { pin: '9210', name: 'Darryl Simon',     email: 'darryl@finesseconstruction.com' },
+    'ccostenbader': { pin: '4420', name: 'Cody Costenbader', email: 'cody@finesseconstruction.com' },
+    'tmerck':       { pin: '1800', name: 'Tony Merck',       email: 'tony@finesseconstruction.com' },
+    'mdesha':       { pin: '9886', name: 'Myles DeSha',      email: 'md@finesseconstruction.com' },
+    'dwood':        { pin: '4879', name: 'Dennis Wood',      email: 'dw@finesseconstruction.com',   defaultJob: 'Sweetgreens' },
+    'kmaki':        { pin: '3461', name: 'Ken Maki',         email: 'maki@finesseconstruction.com', defaultJob: 'Sherman Plaza' },
+    'jhubner':      { pin: '2589', name: 'Josh Hubner',      email: 'josh@finesseconstruction.com', defaultJob: 'Amazing Explorers Queen Creek' },
+    'dgreathouse':  { pin: '3282', name: 'Doug Greathouse',  email: 'dg@finesseconstruction.com',   defaultJob: 'Sherman Plaza' },
+    'jowens':       { pin: '1800', name: 'Justin Owens',     email: '',                             defaultJob: 'Palo on 75th' },
   };
 
   let loginAttempts = 0;
@@ -356,6 +360,7 @@
       nameInput.readOnly = true;
       nameInput.style.background = '#eef3f9';
       nameInput.style.color = '#4a5f7a';
+      window._userEmail = user.email || '';
       // Auto-populate job if the super has a default
       if (user.defaultJob) {
         const jobSelect = document.getElementById('job-select');
@@ -397,9 +402,13 @@
   const ENDPOINT = 'https://formspree.io/f/xgopavle';
   const TO_EMAIL = 'deshamyles@gmail.com';
 
-  // ── AUTO FRIDAY DATE ─────────────────────────────────────
+  // ── AUTO DATES ───────────────────────────────────────────
   (function() {
-    const t = new Date(), d = t.getDay();
+    const t = new Date();
+    // Today
+    document.getElementById('today-date-input').value = t.toISOString().split('T')[0];
+    // Friday
+    const d = t.getDay();
     const f = new Date(t);
     f.setDate(t.getDate() + (d === 5 ? 0 : (5 - d + 7) % 7));
     document.getElementById('week-date-input').value = f.toISOString().split('T')[0];
@@ -417,7 +426,6 @@
     () => form.querySelector('[name="completed"]').value.trim(),
     () => form.querySelector('[name="planned"]').value.trim(),
     () => form.querySelector('[name="manpower"]').value.trim(),
-    () => form.querySelector('[name="deliveries"]').value.trim(),
     () => form.querySelector('[name="delays"]').value.trim(),
     () => form.querySelector('[name="attention"]').value.trim(),
     () => form.querySelector('[name="inspections_flag"]:checked') ? form.querySelector('[name="inspections_flag"]:checked').value : '',
@@ -441,6 +449,9 @@
   document.querySelectorAll('[name="safety_flag"]').forEach(r =>
     r.addEventListener('change', () =>
       document.getElementById('safety-detail').classList.toggle('visible', r.value === 'Yes' && r.checked)));
+  document.querySelectorAll('[name="deliveries_flag"]').forEach(r =>
+    r.addEventListener('change', () =>
+      document.getElementById('deliveries-detail').classList.toggle('visible', r.value === 'Yes' && r.checked)));
   document.querySelectorAll('[name="sub_flag"]').forEach(r =>
     r.addEventListener('change', () =>
       document.getElementById('sub-detail').classList.toggle('visible', r.value === 'Yes' && r.checked)));
@@ -463,7 +474,6 @@
     chk('f-completed',  form.querySelector('[name="completed"]').value.trim());
     chk('f-planned',    form.querySelector('[name="planned"]').value.trim());
     chk('f-manpower',   form.querySelector('[name="manpower"]').value.trim());
-    chk('f-deliveries', form.querySelector('[name="deliveries"]').value.trim());
     chk('f-delays',     form.querySelector('[name="delays"]').value.trim());
     chk('f-attention',  form.querySelector('[name="attention"]').value.trim());
     chk('f-inspections', form.querySelector('[name="inspections_flag"]:checked'));
@@ -474,6 +484,8 @@
   function buildBody(d) {
     const sf = d.get('safety_flag')   || 'Not answered';
     const sd = d.get('safety_detail') || '—';
+    const df = d.get('deliveries_flag') || 'Not answered';
+    const dd = d.get('deliveries_detail') || '—';
     const uf = d.get('sub_flag')      || 'Not answered';
     const ud = d.get('sub_detail')    || '—';
     const inf = d.get('inspections_flag') || 'Not answered';
@@ -486,35 +498,35 @@ Name           : ${d.get('super_name')}
 Job            : ${jobName}
 Week Ending    : ${d.get('week_date')}
 
-01 — WORK COMPLETED THIS WEEK
+01 — WORK COMPLETED
 ${d.get('completed')}
 
-02 — WORK PLANNED FOR NEXT WEEK
+02 — WORK PLANNED
 ${d.get('planned')}
 
 03 — MANPOWER ON SITE
 ${d.get('manpower')}
 
-04 — MATERIAL DELIVERIES
-${d.get('deliveries')}
-
-05 — DELAYS OR BLOCKERS
+04 — DELAYS OR BLOCKERS
 ${d.get('delays')}
 
-06 — ITEMS REQUIRING IMMEDIATE PM ACTION
+05 — ITEMS REQUIRING IMMEDIATE PM ACTION
 ${d.get('attention')}
 
-07 — INSPECTIONS & PERMIT ACTIVITY
+06 — INSPECTIONS & PERMIT ACTIVITY
 ${inf}${inf==='Yes'?'\nDetail: '+ind:''}
 
-08 — SAFETY ISSUES
+07 — SAFETY ISSUES
 ${sf}${sf==='Yes'?'\nDetail: '+sd:''}
 
-09 — SUBCONTRACTOR ISSUES
+08 — SUBCONTRACTOR ISSUES
 ${uf}${uf==='Yes'?'\nDetail: '+ud:''}
 
+09 — MATERIAL DELIVERIES
+${df}${df==='Yes'?'\nDetail: '+dd:''}
+
 ================================================
-Submitted via Finesse Weekly Check-In`;
+Submitted via Finesse Field Check-In`;
   }
 
   // ── SUBMIT ────────────────────────────────────────────────
@@ -544,7 +556,7 @@ Submitted via Finesse Weekly Check-In`;
       const res = await fetch(ENDPOINT, {
         method: 'POST',
         headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ _subject: `[${job}] Weekly Check-In — ${sup} — ${dt}`, _replyto: TO_EMAIL, message: body })
+        body: JSON.stringify({ _subject: `[${job}] Field Check-In — ${sup} — ${dt}`, _replyto: TO_EMAIL, _cc: window._userEmail || '', message: body })
       });
       overlay.classList.remove('active');
       res.ok ? showSuccess() : fallback(sup, job, dt, body);
@@ -555,7 +567,7 @@ Submitted via Finesse Weekly Check-In`;
   });
 
   function fallback(sup, job, dt, body) {
-    const s = encodeURIComponent(`[${job}] Weekly Check-In — ${sup} — ${dt}`);
+    const s = encodeURIComponent(`[${job}] Field Check-In — ${sup} — ${dt}`);
     const b = encodeURIComponent(body);
     window.location.href = `mailto:${TO_EMAIL}?subject=${s}&body=${b}`;
     setTimeout(showSuccess, 1000);
