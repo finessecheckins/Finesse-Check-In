@@ -311,7 +311,7 @@
 <div class="success-screen" id="success-screen">
   <div class="success-icon">✓</div>
   <h2>Submitted</h2>
-  <p>Your check-in has been received by the PM team. Have a good weekend.</p>
+  <p>Your check-in has been received by the PM team.</p>
 </div>
 
 <div class="sending-overlay" id="sending-overlay">
@@ -492,7 +492,7 @@
     const ind = d.get('inspections_detail') || '—';
     const jobSel = d.get('job_name');
     const jobName = jobSel === 'Other' ? (d.get('job_name_other') || 'Other') : jobSel;
-    return `FINESSE CONSTRUCTION — WEEKLY FIELD CHECK-IN
+    return `FINESSE CONSTRUCTION — FIELD CHECK-IN
 ================================================
 Name           : ${d.get('super_name')}
 Job            : ${jobName}
@@ -556,7 +556,7 @@ Submitted via Finesse Field Check-In`;
       const res = await fetch(ENDPOINT, {
         method: 'POST',
         headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ _subject: `[${job}] Field Check-In — ${sup} — ${dt}`, _replyto: TO_EMAIL, _cc: window._userEmail || '', message: body })
+        body: JSON.stringify({ _subject: `[${job}] Field Check-In — ${sup} — ${dt}`, _replyto: window._userEmail || '', _cc: window._userEmail || '', message: body })
       });
       overlay.classList.remove('active');
       res.ok ? showSuccess() : fallback(sup, job, dt, body);
