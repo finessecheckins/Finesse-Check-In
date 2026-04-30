@@ -112,6 +112,52 @@
   .login-attempts { font-size: 11px; color: var(--gray); text-align: center; margin-top: 10px; }
   .locked-msg { background: #fff5e6; border: 1px solid #f5d9a8; border-radius: 6px; padding: 14px; font-size: 12px; color: #9a6000; text-align: center; margin-top: 14px; display: none; }
   .locked-msg.visible { display: block; }
+
+  /* ── TRADE PICKER ── */
+  .trade-picker-btn { width: 100%; background: var(--input-bg); border: 1.5px dashed var(--border); color: var(--navy); font-family: 'Open Sans', sans-serif; font-size: 14px; font-weight: 600; padding: 14px; border-radius: 6px; cursor: pointer; transition: all 0.15s; text-align: center; }
+  .trade-picker-btn:hover { border-color: var(--sky); background: rgba(91,184,232,0.05); }
+  .trade-picker-btn.has-selections { border-style: solid; border-color: var(--border); background: var(--white); }
+
+  #selected-trades-list { margin-top: 10px; }
+  #selected-trades-list:empty { display: none; }
+  .selected-trade-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .selected-trade-row:last-child { border-bottom: none; }
+  .selected-trade-name { flex: 1; font-size: 14px; color: var(--text); font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .selected-trade-name-input { flex: 1; min-width: 0; background: var(--input-bg); border: 1.5px solid var(--border); color: var(--text); font-family: 'Open Sans', sans-serif; font-size: 14px; padding: 8px 10px; border-radius: 5px; outline: none; }
+  .selected-trade-name-input:focus { border-color: var(--sky); background: var(--white); }
+  .selected-trade-count { width: 64px; text-align: center; background: var(--input-bg); border: 1.5px solid var(--border); color: var(--text); font-family: 'Open Sans', sans-serif; font-size: 14px; font-weight: 600; padding: 8px; border-radius: 5px; outline: none; -moz-appearance: textfield; flex-shrink: 0; }
+  .selected-trade-count::-webkit-outer-spin-button, .selected-trade-count::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .selected-trade-count:focus { border-color: var(--sky); background: var(--white); }
+  .trade-remove-btn { width: 30px; height: 30px; border: none; background: #fff0f0; color: #c0392b; font-size: 20px; font-weight: 700; line-height: 1; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s; padding: 0; }
+  .trade-remove-btn:hover { background: #ffd9d9; }
+
+  .add-custom-trade-btn { margin-top: 12px; width: 100%; background: transparent; border: 1px dashed var(--light-gray); color: var(--text-light); font-family: 'Open Sans', sans-serif; font-size: 13px; font-weight: 600; padding: 11px; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
+  .add-custom-trade-btn:hover { border-color: var(--sky); color: var(--navy); }
+
+  /* Modal */
+  .trade-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(27,42,74,0.55); z-index: 300; align-items: flex-end; justify-content: center; }
+  .trade-modal-overlay.active { display: flex; }
+  .trade-modal { background: var(--white); width: 100%; max-width: 480px; max-height: 88vh; border-radius: 14px 14px 0 0; display: flex; flex-direction: column; animation: slideUp 0.22s ease-out; }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @media (min-width: 640px) {
+    .trade-modal-overlay { align-items: center; }
+    .trade-modal { border-radius: 12px; max-height: 80vh; }
+  }
+  .trade-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--border); font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--navy); }
+  .trade-modal-close { background: none; border: none; font-size: 28px; line-height: 1; color: var(--gray); cursor: pointer; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
+  .trade-modal-search { padding: 14px 20px; border-bottom: 1px solid var(--border); }
+  .trade-modal-search input { width: 100%; background: var(--input-bg); border: 1.5px solid var(--border); color: var(--text); font-family: 'Open Sans', sans-serif; font-size: 15px; padding: 11px 14px; border-radius: 6px; outline: none; -webkit-appearance: none; appearance: none; }
+  .trade-modal-search input:focus { border-color: var(--sky); background: var(--white); }
+  .trade-modal-list { flex: 1; overflow-y: auto; padding: 6px 0; -webkit-overflow-scrolling: touch; }
+  .trade-option { display: flex; align-items: center; padding: 13px 20px; cursor: pointer; user-select: none; font-size: 15px; color: var(--text); }
+  .trade-option:hover { background: var(--offwhite); }
+  .trade-option input[type="checkbox"] { margin-right: 12px; width: 19px; height: 19px; accent-color: var(--sky); cursor: pointer; flex-shrink: 0; }
+  .trade-option.hidden { display: none; }
+  .trade-option-empty { padding: 28px 20px; text-align: center; color: var(--gray); font-size: 13px; display: none; }
+  .trade-option-empty.visible { display: block; }
+  .trade-modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); }
+  .trade-modal-done { width: 100%; background: var(--navy); color: var(--white); border: none; font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; padding: 14px; border-radius: 6px; cursor: pointer; transition: background 0.15s; }
+  .trade-modal-done:hover { background: var(--navy-mid); }
 </style>
 </head>
 <body>
@@ -220,8 +266,13 @@
   <div class="card">
     <div class="field" id="f-manpower">
       <label>Manpower on Site <span class="req">*</span></label>
-      <input type="text" name="manpower" placeholder="e.g. 4 framers, 2 concrete, 1 foreman">
-      <div class="error-msg">Required.</div>
+      <button type="button" class="trade-picker-btn" id="open-trade-picker">
+        <span id="trade-picker-btn-text">+ Select trades on site</span>
+      </button>
+      <div id="selected-trades-list"></div>
+      <button type="button" class="add-custom-trade-btn" id="add-custom-trade">+ Add custom trade (not in list)</button>
+      <input type="hidden" name="manpower" id="manpower-hidden">
+      <div class="error-msg">Add at least one trade with a count.</div>
     </div>
     <div class="field" id="f-delays">
       <label>Delays or Blockers <span class="req">*</span></label>
@@ -306,6 +357,23 @@
   </div>
 
 </form>
+</div>
+
+<!-- Trade Picker Modal -->
+<div class="trade-modal-overlay" id="trade-modal">
+  <div class="trade-modal" role="dialog" aria-label="Select trades">
+    <div class="trade-modal-header">
+      <span>Select Trades</span>
+      <button type="button" class="trade-modal-close" id="close-trade-picker" aria-label="Close">&times;</button>
+    </div>
+    <div class="trade-modal-search">
+      <input type="text" id="trade-search" placeholder="Search trades…" autocomplete="off" autocapitalize="none" spellcheck="false">
+    </div>
+    <div class="trade-modal-list" id="trade-list"></div>
+    <div class="trade-modal-footer">
+      <button type="button" class="trade-modal-done" id="done-trade-picker">Done</button>
+    </div>
+  </div>
 </div>
 
 <div class="success-screen" id="success-screen">
@@ -413,6 +481,224 @@
     f.setDate(t.getDate() + (d === 5 ? 0 : (5 - d + 7) % 7));
     document.getElementById('week-date-input').value = f.toISOString().split('T')[0];
   })();
+
+  // ── TRADE PICKER ─────────────────────────────────────────
+  const TRADES = [
+    'Cabinet Installer',
+    'Carpenter (Finish)',
+    'Concrete / Cement',
+    'Demolition',
+    'Drywaller',
+    'Electrician',
+    'Excavator',
+    'Fire Protection',
+    'Flooring',
+    'Foreman',
+    'Framer',
+    'General Laborer',
+    'Glazier',
+    'HVAC',
+    'Insulation',
+    'Landscaper',
+    'Low Voltage / Data',
+    'Mason',
+    'Millwork',
+    'Painter',
+    'Plumber',
+    'Roofer',
+    'Steel / Iron Worker',
+    'Stucco',
+    'Tile Setter',
+    'Waterproofer',
+    'Welder'
+  ];
+
+  const tradeState = {
+    selected: new Set(),  // names from TRADES list
+    counts: {},           // { 'Framer': 4, ... }
+    customs: []           // [{ id, name, count }, ...]
+  };
+  let _customId = 0;
+
+  const tradeModal      = document.getElementById('trade-modal');
+  const tradeListEl     = document.getElementById('trade-list');
+  const tradeSearch     = document.getElementById('trade-search');
+  const selectedListEl  = document.getElementById('selected-trades-list');
+  const pickerBtn       = document.getElementById('open-trade-picker');
+  const pickerBtnText   = document.getElementById('trade-picker-btn-text');
+  const addCustomBtn    = document.getElementById('add-custom-trade');
+  const manpowerHidden  = document.getElementById('manpower-hidden');
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // Build trade list (once)
+  (function buildTradeList() {
+    TRADES.forEach(name => {
+      const opt = document.createElement('label');
+      opt.className = 'trade-option';
+      opt.dataset.tradeName = name.toLowerCase();
+      opt.innerHTML = `<input type="checkbox" data-trade="${escapeHtml(name)}"><span>${escapeHtml(name)}</span>`;
+      tradeListEl.appendChild(opt);
+    });
+    const empty = document.createElement('div');
+    empty.className = 'trade-option-empty';
+    empty.id = 'trade-empty-msg';
+    empty.textContent = 'No trades match. Use "Add custom trade" instead.';
+    tradeListEl.appendChild(empty);
+  })();
+
+  // Filter as you type
+  tradeSearch.addEventListener('input', () => {
+    const q = tradeSearch.value.trim().toLowerCase();
+    let visible = 0;
+    tradeListEl.querySelectorAll('.trade-option').forEach(opt => {
+      const match = !q || opt.dataset.tradeName.includes(q);
+      opt.classList.toggle('hidden', !match);
+      if (match) visible++;
+    });
+    document.getElementById('trade-empty-msg').classList.toggle('visible', visible === 0);
+  });
+
+  function openTradeModal() {
+    // Sync checkboxes with current selection
+    tradeListEl.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.checked = tradeState.selected.has(cb.dataset.trade);
+    });
+    tradeSearch.value = '';
+    tradeListEl.querySelectorAll('.trade-option').forEach(o => o.classList.remove('hidden'));
+    document.getElementById('trade-empty-msg').classList.remove('visible');
+    tradeModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeTradeModal() {
+    tradeModal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  pickerBtn.addEventListener('click', openTradeModal);
+  document.getElementById('close-trade-picker').addEventListener('click', closeTradeModal);
+  tradeModal.addEventListener('click', e => { if (e.target === tradeModal) closeTradeModal(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && tradeModal.classList.contains('active')) closeTradeModal();
+  });
+
+  // Done button — commit selection
+  document.getElementById('done-trade-picker').addEventListener('click', () => {
+    const newSet = new Set();
+    tradeListEl.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => newSet.add(cb.dataset.trade));
+    // Drop counts for trades that were unselected; preserve existing ones
+    Object.keys(tradeState.counts).forEach(name => { if (!newSet.has(name)) delete tradeState.counts[name]; });
+    newSet.forEach(name => { if (!(name in tradeState.counts)) tradeState.counts[name] = ''; });
+    tradeState.selected = newSet;
+    renderSelected();
+    closeTradeModal();
+  });
+
+  addCustomBtn.addEventListener('click', () => {
+    tradeState.customs.push({ id: ++_customId, name: '', count: '' });
+    renderSelected();
+    // Focus the new name input
+    setTimeout(() => {
+      const inputs = selectedListEl.querySelectorAll('.selected-trade-name-input');
+      const last = inputs[inputs.length - 1];
+      if (last) last.focus();
+    }, 0);
+  });
+
+  function renderSelected() {
+    selectedListEl.innerHTML = '';
+    // Master list trades — render in TRADES order for stable display
+    TRADES.forEach(name => {
+      if (!tradeState.selected.has(name)) return;
+      const row = document.createElement('div');
+      row.className = 'selected-trade-row';
+      row.innerHTML = `
+        <span class="selected-trade-name" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
+        <input type="number" class="selected-trade-count" min="0" max="999" inputmode="numeric" pattern="[0-9]*" placeholder="#" data-trade="${escapeHtml(name)}" value="${escapeHtml(tradeState.counts[name] || '')}">
+        <button type="button" class="trade-remove-btn" data-remove-trade="${escapeHtml(name)}" aria-label="Remove ${escapeHtml(name)}">&times;</button>
+      `;
+      selectedListEl.appendChild(row);
+    });
+    // Custom trades
+    tradeState.customs.forEach(c => {
+      const row = document.createElement('div');
+      row.className = 'selected-trade-row';
+      row.innerHTML = `
+        <input type="text" class="selected-trade-name-input" placeholder="Trade name" data-custom-id="${c.id}" data-custom-field="name" value="${escapeHtml(c.name)}">
+        <input type="number" class="selected-trade-count" min="0" max="999" inputmode="numeric" pattern="[0-9]*" placeholder="#" data-custom-id="${c.id}" data-custom-field="count" value="${escapeHtml(c.count)}">
+        <button type="button" class="trade-remove-btn" data-remove-custom="${c.id}" aria-label="Remove custom trade">&times;</button>
+      `;
+      selectedListEl.appendChild(row);
+    });
+
+    // Wire up inputs
+    selectedListEl.querySelectorAll('input[data-trade]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        tradeState.counts[inp.dataset.trade] = inp.value;
+        syncManpower();
+        updateProg();
+      });
+    });
+    selectedListEl.querySelectorAll('input[data-custom-id]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const c = tradeState.customs.find(x => String(x.id) === inp.dataset.customId);
+        if (!c) return;
+        c[inp.dataset.customField] = inp.value;
+        syncManpower();
+        updateProg();
+      });
+    });
+    selectedListEl.querySelectorAll('[data-remove-trade]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const name = btn.getAttribute('data-remove-trade');
+        tradeState.selected.delete(name);
+        delete tradeState.counts[name];
+        renderSelected();
+        syncManpower();
+        updateProg();
+      });
+    });
+    selectedListEl.querySelectorAll('[data-remove-custom]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = +btn.getAttribute('data-remove-custom');
+        tradeState.customs = tradeState.customs.filter(c => c.id !== id);
+        renderSelected();
+        syncManpower();
+        updateProg();
+      });
+    });
+
+    // Update picker button label
+    const totalSelected = tradeState.selected.size;
+    if (totalSelected > 0) {
+      pickerBtnText.textContent = `Edit Trades (${totalSelected} from list)`;
+      pickerBtn.classList.add('has-selections');
+    } else {
+      pickerBtnText.textContent = '+ Select trades on site';
+      pickerBtn.classList.remove('has-selections');
+    }
+
+    syncManpower();
+  }
+
+  // Build the manpower string and sync to the hidden input.
+  // Trades with blank/zero counts are omitted (per spec).
+  function syncManpower() {
+    const lines = [];
+    TRADES.forEach(name => {
+      if (!tradeState.selected.has(name)) return;
+      const n = parseInt(tradeState.counts[name], 10);
+      if (n > 0) lines.push(`${name}: ${n}`);
+    });
+    tradeState.customs.forEach(c => {
+      const n = parseInt(c.count, 10);
+      const nm = (c.name || '').trim();
+      if (n > 0 && nm) lines.push(`${nm} (other): ${n}`);
+    });
+    manpowerHidden.value = lines.join('\n');
+  }
 
   // ── PROGRESS ─────────────────────────────────────────────
   const form = document.getElementById('checkin-form');
