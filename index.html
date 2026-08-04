@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Finesse Construction — Field Check-In</title>
+<title>Finesse Construction — Superintendent Weekly Report</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -26,7 +26,7 @@
   body { background: var(--offwhite); color: var(--text); font-family: 'Open Sans', sans-serif; min-height: 100vh; padding-bottom: 60px; }
 
   .header { background: var(--navy); padding: 0 20px; display: flex; align-items: center; justify-content: space-between; min-height: 70px; border-bottom: 3px solid var(--sky); }
-  .header-logo { height: 50px; width: auto; display: block; }
+  .header-logo { height: 46px; width: auto; display: block; }
   .header-right { text-align: right; }
   .header-right h1 { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 2px; color: var(--white); text-transform: uppercase; line-height: 1; }
   .header-right p { font-size: 10px; color: var(--sky-light); letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
@@ -38,11 +38,20 @@
 
   .form-wrap { padding: 20px 16px 0; max-width: 640px; margin: 0 auto; }
 
+  .due-note { max-width: 640px; margin: 16px auto 0; padding: 0 16px; }
+  .due-note-inner { background: rgba(91,184,232,0.1); border: 1px solid var(--sky); border-radius: 8px; padding: 12px 16px; font-size: 12px; color: var(--navy); font-weight: 600; text-align: center; letter-spacing: 0.5px; }
+
+  .carry-banner { max-width: 640px; margin: 12px auto 0; padding: 0 16px; display: none; }
+  .carry-banner.visible { display: block; }
+  .carry-banner-inner { background: #eef7ef; border: 1px solid #b6dbb9; border-radius: 8px; padding: 12px 16px; font-size: 12px; color: #2f6b34; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .carry-banner-inner .ico { font-size: 15px; }
+
   .section-label { display: flex; align-items: center; gap: 10px; margin: 28px 0 12px; }
   .section-diamond { width: 24px; height: 24px; background: var(--sky); transform: rotate(45deg); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
   .section-num-inner { transform: rotate(-45deg); font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 9px; color: var(--white); }
   .section-title { font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 700; color: var(--navy); letter-spacing: 2px; text-transform: uppercase; }
   .section-line { flex: 1; height: 1px; background: var(--border); }
+  .section-hint { font-size: 11px; color: var(--gray); margin: -4px 0 10px; line-height: 1.5; }
 
   .card { background: var(--white); border-radius: 8px; padding: 18px 16px; box-shadow: 0 1px 4px rgba(27,42,74,0.07); border: 1px solid var(--border); margin-bottom: 10px; }
 
@@ -50,6 +59,7 @@
   .field:last-child { margin-bottom: 0; }
   label { display: block; font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 700; color: var(--text-light); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 7px; }
   label .req { color: var(--sky-dark); margin-left: 2px; }
+  .field-sub { font-size: 11px; color: var(--gray); font-weight: 400; text-transform: none; letter-spacing: 0; margin-top: 3px; }
 
   input[type="text"], input[type="date"], textarea, select {
     width: 100%; background: var(--input-bg); border: 1.5px solid var(--border); color: var(--text);
@@ -58,12 +68,22 @@
   }
   select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238898aa' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; cursor: pointer; }
   select:focus { border-color: var(--sky); background-color: var(--white); box-shadow: 0 0 0 3px rgba(91,184,232,0.15); }
-  input[type="date"] { background: #e4eaf4; color: var(--text-light); font-weight: 600; pointer-events: none; }
-  input[type="date"]::-webkit-calendar-picker-indicator { display: none; }
   input[type="text"]:focus, textarea:focus { border-color: var(--sky); background: var(--white); box-shadow: 0 0 0 3px rgba(91,184,232,0.15); }
   input::placeholder, textarea::placeholder { color: var(--light-gray); font-size: 13px; }
   textarea { resize: vertical; min-height: 88px; line-height: 1.6; }
-  .date-note { font-size: 11px; color: var(--gray); margin-top: 5px; }
+  .readonly-field { background: #eef3f9 !important; color: #4a5f7a !important; font-weight: 600; }
+
+  .week-block { border: 1.5px solid var(--border); border-radius: 8px; padding: 12px 12px 14px; margin-bottom: 12px; background: var(--input-bg); }
+  .week-block:last-child { margin-bottom: 0; }
+  .week-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 9px; }
+  .week-tag { font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--white); background: var(--navy-mid); padding: 5px 10px; border-radius: 5px; flex-shrink: 0; }
+  .week-dates-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 9px; }
+  .week-dates-row .mini-label { font-family: 'Montserrat', sans-serif; font-size: 9px; font-weight: 700; color: var(--text-light); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; display: block; }
+  .week-date { width: 100%; background: var(--white); border: 1.5px solid var(--border); color: var(--text); font-family: 'Open Sans', sans-serif; font-size: 13px; font-weight: 600; padding: 8px 10px; border-radius: 5px; outline: none; -webkit-appearance: none; appearance: none; min-height: 38px; }
+  .week-date:focus { border-color: var(--sky); box-shadow: 0 0 0 3px rgba(91,184,232,0.15); }
+  .week-block textarea { min-height: 76px; background: var(--white); }
+  .week-remove { width: 26px; height: 26px; border: none; background: #fff0f0; color: #c0392b; font-size: 18px; font-weight: 700; line-height: 1; border-radius: 50%; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; }
+  .week-remove:hover { background: #ffd9d9; }
 
   .toggle-group { display: flex; gap: 8px; }
   .toggle-group input[type="radio"] { display: none; }
@@ -76,6 +96,18 @@
   .error-msg { color: #c0392b; font-size: 11px; font-weight: 600; margin-top: 5px; display: none; }
   .field.has-error input[type="text"], .field.has-error textarea { border-color: #c0392b; background: #fff8f8; }
   .field.has-error .error-msg { display: block; }
+
+  /* Dynamic row lists (inspections) */
+  .row-list { display: flex; flex-direction: column; gap: 10px; }
+  .dyn-row { border: 1.5px solid var(--border); border-radius: 8px; padding: 12px; background: var(--input-bg); position: relative; }
+  .dyn-row .dyn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .dyn-row .full { grid-column: 1 / -1; }
+  .dyn-row input, .dyn-row select { font-size: 14px; padding: 10px 12px; background: var(--white); }
+  .dyn-row .mini-label { font-family: 'Montserrat', sans-serif; font-size: 9px; font-weight: 700; color: var(--text-light); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; display: block; }
+  .dyn-remove { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; border: none; background: #fff0f0; color: #c0392b; font-size: 18px; font-weight: 700; line-height: 1; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .dyn-remove:hover { background: #ffd9d9; }
+  .add-row-btn { margin-top: 10px; width: 100%; background: transparent; border: 1px dashed var(--light-gray); color: var(--text-light); font-family: 'Open Sans', sans-serif; font-size: 13px; font-weight: 600; padding: 11px; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
+  .add-row-btn:hover { border-color: var(--sky); color: var(--navy); }
 
   .submit-wrap { max-width: 640px; margin: 32px auto 0; padding: 24px 16px 0; border-top: 1px solid var(--border); }
   .submit-btn { width: 100%; background: linear-gradient(135deg, var(--navy-mid), var(--navy)); color: var(--white); border: none; font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; padding: 18px; border-radius: 8px; cursor: pointer; transition: opacity 0.2s, transform 0.1s; box-shadow: 0 4px 14px rgba(27,42,74,0.25); }
@@ -112,81 +144,26 @@
   .login-attempts { font-size: 11px; color: var(--gray); text-align: center; margin-top: 10px; }
   .locked-msg { background: #fff5e6; border: 1px solid #f5d9a8; border-radius: 6px; padding: 14px; font-size: 12px; color: #9a6000; text-align: center; margin-top: 14px; display: none; }
   .locked-msg.visible { display: block; }
-
-  /* ── TRADE PICKER ── */
-  .trade-picker-btn { width: 100%; background: var(--input-bg); border: 1.5px dashed var(--border); color: var(--navy); font-family: 'Open Sans', sans-serif; font-size: 14px; font-weight: 600; padding: 14px; border-radius: 6px; cursor: pointer; transition: all 0.15s; text-align: center; }
-  .trade-picker-btn:hover { border-color: var(--sky); background: rgba(91,184,232,0.05); }
-  .trade-picker-btn.has-selections { border-style: solid; border-color: var(--border); background: var(--white); }
-
-  #selected-trades-list { margin-top: 10px; }
-  #selected-trades-list:empty { display: none; }
-  .selected-trade-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
-  .selected-trade-row:last-child { border-bottom: none; }
-  .selected-trade-name { flex: 1; font-size: 14px; color: var(--text); font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .selected-trade-name-input { flex: 1; min-width: 0; background: var(--input-bg); border: 1.5px solid var(--border); color: var(--text); font-family: 'Open Sans', sans-serif; font-size: 14px; padding: 8px 10px; border-radius: 5px; outline: none; }
-  .selected-trade-name-input:focus { border-color: var(--sky); background: var(--white); }
-  .selected-trade-count { width: 64px; text-align: center; background: var(--input-bg); border: 1.5px solid var(--border); color: var(--text); font-family: 'Open Sans', sans-serif; font-size: 14px; font-weight: 600; padding: 8px; border-radius: 5px; outline: none; -moz-appearance: textfield; flex-shrink: 0; }
-  .selected-trade-count::-webkit-outer-spin-button, .selected-trade-count::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-  .selected-trade-count:focus { border-color: var(--sky); background: var(--white); }
-  .trade-remove-btn { width: 30px; height: 30px; border: none; background: #fff0f0; color: #c0392b; font-size: 20px; font-weight: 700; line-height: 1; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s; padding: 0; }
-  .trade-remove-btn:hover { background: #ffd9d9; }
-
-  .add-custom-trade-btn { margin-top: 12px; width: 100%; background: transparent; border: 1px dashed var(--light-gray); color: var(--text-light); font-family: 'Open Sans', sans-serif; font-size: 13px; font-weight: 600; padding: 11px; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
-  .add-custom-trade-btn:hover { border-color: var(--sky); color: var(--navy); }
-
-  /* Modal */
-  .trade-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(27,42,74,0.55); z-index: 300; align-items: flex-end; justify-content: center; }
-  .trade-modal-overlay.active { display: flex; }
-  .trade-modal { background: var(--white); width: 100%; max-width: 480px; max-height: 88vh; border-radius: 14px 14px 0 0; display: flex; flex-direction: column; animation: slideUp 0.22s ease-out; }
-  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-  @media (min-width: 640px) {
-    .trade-modal-overlay { align-items: center; }
-    .trade-modal { border-radius: 12px; max-height: 80vh; }
-  }
-  .trade-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--border); font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--navy); }
-  .trade-modal-close { background: none; border: none; font-size: 28px; line-height: 1; color: var(--gray); cursor: pointer; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
-  .trade-modal-search { padding: 14px 20px; border-bottom: 1px solid var(--border); }
-  .trade-modal-search input { width: 100%; background: var(--input-bg); border: 1.5px solid var(--border); color: var(--text); font-family: 'Open Sans', sans-serif; font-size: 15px; padding: 11px 14px; border-radius: 6px; outline: none; -webkit-appearance: none; appearance: none; }
-  .trade-modal-search input:focus { border-color: var(--sky); background: var(--white); }
-  .trade-modal-list { flex: 1; overflow-y: auto; padding: 6px 0; -webkit-overflow-scrolling: touch; }
-  .trade-option { display: flex; align-items: center; padding: 13px 20px; cursor: pointer; user-select: none; font-size: 15px; color: var(--text); }
-  .trade-option:hover { background: var(--offwhite); }
-  .trade-option input[type="checkbox"] { margin-right: 12px; width: 19px; height: 19px; accent-color: var(--sky); cursor: pointer; flex-shrink: 0; }
-  .trade-option.hidden { display: none; }
-  .trade-option-empty { padding: 28px 20px; text-align: center; color: var(--gray); font-size: 13px; display: none; }
-  .trade-option-empty.visible { display: block; }
-  .trade-modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); }
-  .trade-modal-done { width: 100%; background: var(--navy); color: var(--white); border: none; font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; padding: 14px; border-radius: 6px; cursor: pointer; transition: background 0.15s; }
-  .trade-modal-done:hover { background: var(--navy-mid); }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <a href="/" style="text-decoration:none;cursor:pointer;" onclick="location.reload();return false;" aria-label="Refresh page"><svg class="header-logo" viewBox="0 0 320 64" xmlns="http://www.w3.org/2000/svg" aria-label="Finesse Construction LLC">
-    <!-- Diamond 1: left/back, bright blue -->
-    <polygon points="38,4 62,32 38,60 14,32" fill="#5BB8E8" opacity="0.9"/>
-    <!-- Diamond 2: right/front, lighter blue, overlapping -->
-    <polygon points="58,10 78,32 58,54 38,32" fill="#8dd0f2" opacity="0.75"/>
-    <!-- Finesse wordmark: bold italic, white -->
-    <text x="88" y="38" font-family="'Montserrat','Arial Black',sans-serif" font-weight="800" font-size="30" fill="#ffffff" font-style="italic" letter-spacing="-1">Finesse</text>
-    <!-- Construction LLC: spaced caps, sky blue -->
-    <text x="90" y="54" font-family="'Montserrat','Arial',sans-serif" font-weight="600" font-size="9.5" fill="#8dd0f2" letter-spacing="2.5">CONSTRUCTION LLC</text>
-  </svg></a>
+  <a href="/" style="text-decoration:none;cursor:pointer;" onclick="location.reload();return false;" aria-label="Refresh page"><img class="header-logo" alt="Finesse Construction LLC" src="data:image/png;base64,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"></a>
   <div class="header-right">
-    <h1>Field Check-In</h1>
-    <p>Field Report</p>
+    <h1>Weekly Report</h1>
+    <p>Superintendent</p>
   </div>
 </div>
 
 <!-- LOGIN SCREEN -->
 <div id="login-screen" class="login-screen">
   <div class="login-card">
-    <h2>Field Check-In</h2>
+    <h2>Weekly Report</h2>
     <p>Enter your username and PIN to continue.</p>
     <div class="login-field">
       <label>Username</label>
-      <input type="text" id="login-username" placeholder="e.g. jsmith" autocomplete="off" autocapitalize="none" spellcheck="false">
+      <input type="text" id="login-username" placeholder="e.g. kmaki" autocomplete="off" autocapitalize="none" spellcheck="false">
     </div>
     <div class="login-field">
       <label>PIN</label>
@@ -206,24 +183,31 @@
   <div class="progress-track"><div class="progress-fill" id="prog-fill"></div></div>
 </div>
 
-<div class="form-wrap" id="form-wrap">
-<form id="checkin-form" novalidate>
+<div class="due-note"><div class="due-note-inner">Due every Tuesday by 12:00 PM — in time to present to the group.</div></div>
 
+<div class="carry-banner" id="carry-banner">
+  <div class="carry-banner-inner"><span class="ico">↻</span><span id="carry-banner-text">Your last look-ahead and standing meeting were loaded. Roll the weeks forward and update before submitting.</span></div>
+</div>
+
+<div class="form-wrap" id="form-wrap">
+<form id="report-form" novalidate>
+
+  <!-- 00 — PROJECT INFO -->
   <div class="section-label">
-    <div class="section-diamond"><span class="section-num-inner">01</span></div>
-    <span class="section-title">Identification</span>
+    <div class="section-diamond"><span class="section-num-inner">00</span></div>
+    <span class="section-title">Project Info</span>
     <div class="section-line"></div>
   </div>
   <div class="card">
     <div class="field" id="f-name">
-      <label>Name <span class="req">*</span></label>
+      <label>Superintendent <span class="req">*</span></label>
       <input type="text" name="super_name" placeholder="Your full name">
       <div class="error-msg">Please enter your name.</div>
     </div>
     <div class="field" id="f-job">
-      <label>Job Name / Project <span class="req">*</span></label>
+      <label>Project <span class="req">*</span></label>
       <select name="job_name" id="job-select">
-        <option value="">— Select a job —</option>
+        <option value="">— Select a project —</option>
         <option value="Palm Canyon">Palm Canyon</option>
         <option value="Sherman Place">Sherman Place</option>
         <option value="Amazing Explorers Queen Creek">Amazing Explorers Queen Creek</option>
@@ -232,154 +216,176 @@
         <option value="Other">Other (please specify)</option>
       </select>
       <div class="conditional" id="job-other-detail">
-        <input type="text" name="job_name_other" placeholder="Enter job name…" style="margin-top:10px;">
+        <input type="text" name="job_name_other" placeholder="Enter project name…" style="margin-top:10px;">
       </div>
+      <div class="field-sub" id="job-assigned-note" style="display:none;">Auto-assigned to your project — change it here if you're on a different job this week.</div>
       <div class="error-msg">Required.</div>
     </div>
-      <input type="hidden" name="today_date" id="today-date-input">
-      <input type="hidden" name="week_date" id="week-date-input">
+    <div class="field" style="margin-bottom:0;">
+      <label>Week Ending</label>
+      <input type="text" name="week_ending" id="week-ending-input" class="readonly-field" readonly>
+      <div class="field-sub">Friday of this week — auto-filled.</div>
+    </div>
+    <input type="hidden" name="report_date" id="report-date-input">
   </div>
 
+  <!-- 01 — THREE-WEEK LOOK-AHEAD -->
+  <div class="section-label">
+    <div class="section-diamond"><span class="section-num-inner">01</span></div>
+    <span class="section-title">Three-Week Look-Ahead</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-hint">Break work out week by week — do not lump weeks together. List scope by trade for each week.</div>
+  <div class="card">
+    <div class="field" id="f-lookahead">
+      <div class="week-block">
+        <div class="week-head">
+          <span class="week-tag">Week 1</span>
+        </div>
+        <div class="week-dates-row">
+          <div><span class="mini-label">Start</span><input type="date" class="week-date" name="wk1_start" data-carry="1"></div>
+          <div><span class="mini-label">End</span><input type="date" class="week-date" name="wk1_end" data-carry="1"></div>
+        </div>
+        <textarea name="wk1_scope" data-carry="1" placeholder="Scope of work by trade for Week 1…"></textarea>
+      </div>
+      <div class="week-block">
+        <div class="week-head">
+          <span class="week-tag">Week 2</span>
+        </div>
+        <div class="week-dates-row">
+          <div><span class="mini-label">Start</span><input type="date" class="week-date" name="wk2_start" data-carry="1"></div>
+          <div><span class="mini-label">End</span><input type="date" class="week-date" name="wk2_end" data-carry="1"></div>
+        </div>
+        <textarea name="wk2_scope" data-carry="1" placeholder="Scope of work by trade for Week 2…"></textarea>
+      </div>
+      <div class="week-block">
+        <div class="week-head">
+          <span class="week-tag">Week 3</span>
+        </div>
+        <div class="week-dates-row">
+          <div><span class="mini-label">Start</span><input type="date" class="week-date" name="wk3_start" data-carry="1"></div>
+          <div><span class="mini-label">End</span><input type="date" class="week-date" name="wk3_end" data-carry="1"></div>
+        </div>
+        <textarea name="wk3_scope" data-carry="1" placeholder="Scope of work by trade for Week 3…"></textarea>
+      </div>
+      <div id="week-add-wrap"><button type="button" class="add-row-btn" id="add-week">+ Add another week</button></div>
+      <div class="error-msg">Fill in at least Week 1 scope.</div>
+    </div>
+  </div>
+
+  <!-- 02 — SUB MEETING -->
   <div class="section-label">
     <div class="section-diamond"><span class="section-num-inner">02</span></div>
-    <span class="section-title">Progress</span>
+    <span class="section-title">Sub Meeting</span>
     <div class="section-line"></div>
   </div>
+  <div class="section-hint">Standing meeting — same day and time every week (Tuesday AM, 6:00–10:00). Set once; it carries over each week.</div>
   <div class="card">
-    <div class="field" id="f-completed">
-      <label>Work Completed <span class="req">*</span></label>
-      <textarea name="completed" placeholder="What got done since the last check-in?"></textarea>
-      <div class="error-msg">Required.</div>
+    <div class="field">
+      <label>Standing Day / Time</label>
+      <input type="text" name="sub_meeting_time" data-carry="1" placeholder="e.g. Tuesdays 7:00 AM">
     </div>
-    <div class="field" id="f-planned">
-      <label>Work Planned <span class="req">*</span></label>
-      <textarea name="planned" placeholder="What's the focus coming up?"></textarea>
-      <div class="error-msg">Required.</div>
+    <div class="field">
+      <label>Attendees</label>
+      <input type="text" name="sub_meeting_attendees" data-carry="1" placeholder="Who attends the standing sub meeting">
+    </div>
+    <div class="field">
+      <label>Discussed / Decided This Week</label>
+      <textarea name="sub_meeting_notes" placeholder="Decisions, sign-offs, trades brought on, test results, scope changes…"></textarea>
     </div>
   </div>
 
+  <!-- 03 — SAFETY -->
   <div class="section-label">
     <div class="section-diamond"><span class="section-num-inner">03</span></div>
-    <span class="section-title">Site Status</span>
+    <span class="section-title">Safety</span>
     <div class="section-line"></div>
   </div>
   <div class="card">
-    <div class="field" id="f-manpower">
-      <label>Manpower on Site <span class="req">*</span></label>
-      <button type="button" class="trade-picker-btn" id="open-trade-picker">
-        <span id="trade-picker-btn-text">+ Select trades on site</span>
-      </button>
-      <div id="selected-trades-list"></div>
-      <button type="button" class="add-custom-trade-btn" id="add-custom-trade">+ Add custom trade (not in list)</button>
-      <input type="hidden" name="manpower" id="manpower-hidden">
-      <div class="error-msg">Add at least one trade with a count.</div>
+    <div class="field">
+      <label>Toolbox Talk Topics Covered This Week</label>
+      <textarea name="toolbox_topics" placeholder="e.g. Portable ladder safety; heat illness prevention…" style="min-height:72px;"></textarea>
     </div>
-    <div class="field" id="f-delays">
-      <label>Delays or Blockers <span class="req">*</span></label>
-      <textarea name="delays" placeholder="Anything slowing us down or at risk?" style="min-height:72px;"></textarea>
+    <div class="field" id="f-nearmiss" style="margin-top:16px; margin-bottom:0;">
+      <label>Any Near-Misses This Week? <span class="req">*</span></label>
+      <div class="toggle-group">
+        <input type="radio" name="nearmiss_flag" id="nearmiss-no" value="No">
+        <label for="nearmiss-no">No</label>
+        <input type="radio" name="nearmiss_flag" id="nearmiss-yes" value="Yes">
+        <label for="nearmiss-yes">Yes</label>
+      </div>
+      <div class="conditional" id="nearmiss-detail">
+        <textarea name="nearmiss_detail" placeholder="Describe the near-miss and any corrective action taken…" style="min-height:72px; margin-top:10px;"></textarea>
+      </div>
       <div class="error-msg">Required.</div>
     </div>
   </div>
 
+  <!-- 04 — INSPECTIONS & TESTS -->
   <div class="section-label">
     <div class="section-diamond"><span class="section-num-inner">04</span></div>
-    <span class="section-title">Action Required</span>
+    <span class="section-title">Inspections &amp; Tests</span>
     <div class="section-line"></div>
   </div>
+  <div class="section-hint">Log every inspection or test — passed, failed, or scheduled. Failed/scheduled items with schedule impact also belong in Section 06.</div>
   <div class="card">
-    <div class="field" id="f-attention">
-      <label>Items Requiring Immediate PM Action <span class="req">*</span></label>
-      <textarea name="attention" placeholder="What needs to be addressed by the PM to keep the job moving?"></textarea>
+    <div class="field" style="margin-bottom:0;">
+      <div class="row-list" id="inspection-list"></div>
+      <button type="button" class="add-row-btn" id="add-inspection">+ Add inspection / test</button>
+      <input type="hidden" name="inspections" id="inspections-hidden">
+    </div>
+  </div>
+
+  <!-- 05 — DECISIONS / APPROVALS NEEDED -->
+  <div class="section-label">
+    <div class="section-diamond"><span class="section-num-inner">05</span></div>
+    <span class="section-title">Decisions / Approvals Needed</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-hint">What you're waiting on from owner, architect, PM, or office. For each: what's needed, from whom, needed by when, and the impact if it slips.</div>
+  <div class="card">
+    <div class="field">
+      <label>Decisions / Approvals Outstanding</label>
+      <textarea name="decisions" placeholder="e.g. Roof redesign — owner sign-off before framing; needed by [date]; holds Week 2 dry-in if not signed."></textarea>
+    </div>
+    <div class="field" id="f-pmneeded" style="margin-bottom:0;">
+      <label>PM Action Needed? <span class="req">*</span></label>
+      <div class="toggle-group">
+        <input type="radio" name="pmneeded_flag" id="pmneeded-no" value="No">
+        <label for="pmneeded-no">No</label>
+        <input type="radio" name="pmneeded_flag" id="pmneeded-yes" value="Yes">
+        <label for="pmneeded-yes">Yes</label>
+      </div>
+      <div class="conditional" id="pmneeded-detail">
+        <textarea name="pmneeded_detail" placeholder="What do you need the PM / office to do, and by when?" style="min-height:72px; margin-top:10px;"></textarea>
+      </div>
       <div class="error-msg">Required.</div>
     </div>
   </div>
 
+  <!-- 06 — ISSUES & CONCERNS -->
   <div class="section-label">
-    <div class="section-diamond"><span class="section-num-inner">05</span></div>
-    <span class="section-title">Flags</span>
+    <div class="section-diamond"><span class="section-num-inner">06</span></div>
+    <span class="section-title">Issues &amp; Concerns to Mitigate</span>
     <div class="section-line"></div>
   </div>
-  <div class="card">
-    <div class="field" id="f-inspections">
-      <label>Any Inspection or Permit Activity? <span class="req">*</span></label>
-      <div class="toggle-group">
-        <input type="radio" name="inspections_flag" id="inspections-no" value="No">
-        <label for="inspections-no">No</label>
-        <input type="radio" name="inspections_flag" id="inspections-yes" value="Yes">
-        <label for="inspections-yes">Yes</label>
-      </div>
-      <div class="conditional" id="inspections-detail">
-        <textarea name="inspections_detail" placeholder="Describe any inspections completed, upcoming, or permit activity to note…" style="min-height:72px; margin-top:10px;"></textarea>
-      </div>
-      <div class="error-msg">Required.</div>
-    </div>
-    <div class="field" style="margin-top:16px;">
-      <label>Any Safety Issues?</label>
-      <div class="toggle-group">
-        <input type="radio" name="safety_flag" id="safety-no" value="No">
-        <label for="safety-no">No</label>
-        <input type="radio" name="safety_flag" id="safety-yes" value="Yes">
-        <label for="safety-yes">Yes</label>
-      </div>
-      <div class="conditional" id="safety-detail">
-        <textarea name="safety_detail" placeholder="Describe the safety issue…" style="min-height:72px; margin-top:10px;"></textarea>
-      </div>
-    </div>
-    <div class="field" style="margin-top:16px;">
-      <label>Any Material Deliveries?</label>
-      <div class="toggle-group">
-        <input type="radio" name="deliveries_flag" id="deliveries-no" value="No">
-        <label for="deliveries-no">No</label>
-        <input type="radio" name="deliveries_flag" id="deliveries-yes" value="Yes">
-        <label for="deliveries-yes">Yes</label>
-      </div>
-      <div class="conditional" id="deliveries-detail">
-        <textarea name="deliveries_detail" placeholder="What was received or is expected? Include dates if known…" style="min-height:72px; margin-top:10px;"></textarea>
-      </div>
-    </div>
-    <div class="field" style="margin-top:16px;">
-      <label>Any Subcontractor Issues?</label>
-      <div class="toggle-group">
-        <input type="radio" name="sub_flag" id="sub-no" value="No">
-        <label for="sub-no">No</label>
-        <input type="radio" name="sub_flag" id="sub-yes" value="Yes">
-        <label for="sub-yes">Yes</label>
-      </div>
-      <div class="conditional" id="sub-detail">
-        <textarea name="sub_detail" placeholder="Describe the subcontractor issue…" style="min-height:72px; margin-top:10px;"></textarea>
-      </div>
-    </div>
+  <div class="section-hint">Mark Yes for any area with something to flag, then add the detail. Anything that could cause delay, cost, or quality problems.</div>
+  <div class="card" id="issues-card">
+    <!-- rows injected by JS -->
   </div>
 
   <div class="submit-wrap">
-    <button type="submit" class="submit-btn">Submit Check-In</button>
-    <p class="submit-note">Your response goes directly to the PM team.</p>
+    <button type="submit" class="submit-btn">Submit Weekly Report</button>
+    <p class="submit-note">Your report goes directly to the PM team.</p>
   </div>
 
 </form>
 </div>
 
-<!-- Trade Picker Modal -->
-<div class="trade-modal-overlay" id="trade-modal">
-  <div class="trade-modal" role="dialog" aria-label="Select trades">
-    <div class="trade-modal-header">
-      <span>Select Trades</span>
-      <button type="button" class="trade-modal-close" id="close-trade-picker" aria-label="Close">&times;</button>
-    </div>
-    <div class="trade-modal-search">
-      <input type="text" id="trade-search" placeholder="Search trades…" autocomplete="off" autocapitalize="none" spellcheck="false">
-    </div>
-    <div class="trade-modal-list" id="trade-list"></div>
-    <div class="trade-modal-footer">
-      <button type="button" class="trade-modal-done" id="done-trade-picker">Done</button>
-    </div>
-  </div>
-</div>
-
 <div class="success-screen" id="success-screen">
   <div class="success-icon">✓</div>
   <h2>Submitted</h2>
-  <p>Your check-in has been received by the PM team.</p>
+  <p>Your weekly report has been received by the PM team. Your look-ahead and standing meeting are saved on this device and will load next week.</p>
 </div>
 
 <div class="sending-overlay" id="sending-overlay">
@@ -393,55 +399,55 @@
 
 <script>
   // ── USER CREDENTIALS ─────────────────────────────────────
-  // Format: username: { pin: '####', name: 'Full Name' }
+  // Format: username: { pin, name, email, defaultJob? }
   const USERS = {
     'rmiranda':     { pin: '4351', name: 'Robert Miranda',   email: 'rm@finesseconstruction.com' },
     'smorris':      { pin: '1913', name: 'Steve Morris',     email: 'sm@finesseconstruction.com' },
     'jgullion':     { pin: '4111', name: 'Joe Gullion',      email: 'jg@finesseconstruction.com' },
-    'dsimon':       { pin: '9210', name: 'Darryl Simon',     email: 'darryl@finesseconstruction.com' },
+    'dsimons':      { pin: '9210', name: 'Darryl Simons',    email: 'darryl@finesseconstruction.com' },
     'ccostenbader': { pin: '4420', name: 'Cody Costenbader', email: 'cody@finesseconstruction.com' },
-    'tmerck':       { pin: '1800', name: 'Tony Merck',       email: 'tony@finesseconstruction.com' },
+    'jbrown':       { pin: '2340', name: 'Jared Brown',      email: 'jared@finesseconstruction.com' },
     'mdesha':       { pin: '9886', name: 'Myles DeSha',      email: 'md@finesseconstruction.com' },
-    'dwood':        { pin: '4879', name: 'Dennis Wood',      email: 'dw@finesseconstruction.com',   defaultJob: 'Sweetgreens' },
+    'dwood':        { pin: '4879', name: 'Dennis Wood',      email: 'dw@finesseconstruction.com',   defaultJob: 'Palm Canyon' },
     'kmaki':        { pin: '3461', name: 'Ken Maki',         email: 'maki@finesseconstruction.com', defaultJob: 'Sherman Place' },
-    'jhubner':      { pin: '2589', name: 'Josh Hubner',      email: 'josh@finesseconstruction.com', defaultJob: 'Amazing Explorers Queen Creek' },
+    'mramirez':     { pin: '1715', name: 'Marco Ramirez',    email: 'marc@finesseconstruction.com', defaultJob: 'Amazing Explorers Queen Creek' },
+    'bmillwood':    { pin: '4954', name: 'Bill Millwood',    email: 'bill@finesseconstruction.com', defaultJob: 'Palo on 75th' },
     'dgreathouse':  { pin: '3282', name: 'Doug Greathouse',  email: 'dg@finesseconstruction.com',   defaultJob: 'Sherman Place' },
-    'jowens':       { pin: '1800', name: 'Justin Owens',     email: '',                             defaultJob: 'Palo on 75th' },
   };
 
+  const STORAGE_PREFIX = 'finesse_weekly_';   // per-username carry-over key
   let loginAttempts = 0;
   const MAX_ATTEMPTS = 5;
+  let currentUsername = '';
 
-  function doLogin() {
+  async function doLogin() {
     if (loginAttempts >= MAX_ATTEMPTS) return;
-
     const username = document.getElementById('login-username').value.trim().toLowerCase();
     const pin = document.getElementById('login-pin').value.trim();
     const user = USERS[username];
 
     if (user && user.pin === pin) {
-      // Success — hide login, show form, pre-fill name
+      currentUsername = username;
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('main-content').style.display = 'block';
       const nameInput = document.querySelector('[name="super_name"]');
       nameInput.value = user.name;
       nameInput.readOnly = true;
-      nameInput.style.background = '#eef3f9';
-      nameInput.style.color = '#4a5f7a';
+      nameInput.classList.add('readonly-field');
       window._userEmail = user.email || '';
-      // Auto-populate job if the super has a default
       if (user.defaultJob) {
         const jobSelect = document.getElementById('job-select');
         jobSelect.value = user.defaultJob;
         jobSelect.dispatchEvent(new Event('change'));
+        document.getElementById('job-assigned-note').style.display = 'block';
       }
+      await loadCarryOver(username);   // pull last entry (backend or device) + roll forward
       updateProg();
     } else {
       loginAttempts++;
       document.getElementById('login-error').classList.add('visible');
       document.getElementById('login-pin').value = '';
       document.getElementById('login-pin').focus();
-
       const remaining = MAX_ATTEMPTS - loginAttempts;
       if (remaining <= 0) {
         document.getElementById('login-error').classList.remove('visible');
@@ -456,252 +462,283 @@
     }
   }
 
-  // Allow Enter key on PIN field
   document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('login-pin').addEventListener('keydown', e => {
-      if (e.key === 'Enter') doLogin();
-    });
-    document.getElementById('login-username').addEventListener('keydown', e => {
-      if (e.key === 'Enter') document.getElementById('login-pin').focus();
-    });
+    document.getElementById('login-pin').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+    document.getElementById('login-username').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('login-pin').focus(); });
   });
 
   // ── CONFIG ───────────────────────────────────────────────
   const ENDPOINT = 'https://formspree.io/f/xgopavle';
   const TO_EMAIL = 'deshamyles@gmail.com';
 
-  // ── AUTO DATES ───────────────────────────────────────────
+  // ── CARRY-OVER BACKEND (Cloudflare Worker + KV) ──────────
+  // Fill these in AFTER deploying the Worker (see backend plan / worker.js).
+  // Leave API_BASE = '' to run on device-only storage (works today, no backend).
+  const API_BASE  = 'https://finesse-lookahead.finessecheckins.workers.dev';   // e.g. 'https://finesse-lookahead.YOURNAME.workers.dev'
+  const WRITE_KEY = 'e6c2e01b0d3705462e5a0f30777a17291182c11f';   // must match the Worker's WRITE_KEY secret
+  const API_ON = !!API_BASE;
+
+  // ── AUTO DATES (American MM/DD/YYYY) ──────────────────────
+  function fmtUS(dt) {
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    const dd = String(dt.getDate()).padStart(2, '0');
+    return mm + '/' + dd + '/' + dt.getFullYear();
+  }
   (function() {
     const t = new Date();
-    // Today
-    document.getElementById('today-date-input').value = t.toISOString().split('T')[0];
-    // Friday
+    document.getElementById('report-date-input').value = fmtUS(t);
     const d = t.getDay();
     const f = new Date(t);
-    f.setDate(t.getDate() + (d === 5 ? 0 : (5 - d + 7) % 7));
-    document.getElementById('week-date-input').value = f.toISOString().split('T')[0];
+    f.setDate(t.getDate() + (d === 5 ? 0 : (5 - d + 7) % 7)); // Friday of this week
+    document.getElementById('week-ending-input').value = fmtUS(f);
   })();
 
-  // ── TRADE PICKER ─────────────────────────────────────────
-  const TRADES = [
-    'Cabinet Installer',
-    'Carpenter (Finish)',
-    'Concrete / Cement',
-    'Demolition',
-    'Drywaller',
-    'Electrician',
-    'Excavator',
-    'Fire Protection',
-    'Flooring',
-    'Foreman',
-    'Framer',
-    'General Laborer',
-    'Glazier',
-    'HVAC',
-    'Insulation',
-    'Landscaper',
-    'Low Voltage / Data',
-    'Mason',
-    'Millwork',
-    'Painter',
-    'Plumber',
-    'Roofer',
-    'Steel / Iron Worker',
-    'Stucco',
-    'Tile Setter',
-    'Waterproofer',
-    'Welder'
+  // ── ISSUES & CONCERNS (06) — Yes/No per category ──────────
+  const ISSUE_CATEGORIES = [
+    { key: 'rfis',       label: 'Open RFIs',        ph: 'e.g. RFI 17, 18, 19 unanswered.' },
+    { key: 'schedule',   label: 'Schedule Delays',  ph: 'What is affecting the schedule?' },
+    { key: 'testing',    label: 'Testing Issues',   ph: 'e.g. testing not yet scheduled — could delay if not set.' },
+    { key: 'subs',       label: 'Sub Issues',       ph: 'Subcontractor problems or risks…' },
+    { key: 'permitting', label: 'Permitting',       ph: 'Permit status or issues…' },
+    { key: 'staking',    label: 'Staking / Survey', ph: 'Staking or survey status or issues…' },
+    { key: 'other',      label: 'Other',            ph: 'Anything else to flag…' },
   ];
+  (function buildIssues() {
+    const card = document.getElementById('issues-card');
+    ISSUE_CATEGORIES.forEach((c, i) => {
+      const field = document.createElement('div');
+      field.className = 'field';
+      if (i === ISSUE_CATEGORIES.length - 1) field.style.marginBottom = '0';
+      field.innerHTML =
+        '<label>' + c.label + '?</label>' +
+        '<div class="toggle-group">' +
+          '<input type="radio" name="' + c.key + '_flag" id="' + c.key + '-no" value="No">' +
+          '<label for="' + c.key + '-no">No</label>' +
+          '<input type="radio" name="' + c.key + '_flag" id="' + c.key + '-yes" value="Yes">' +
+          '<label for="' + c.key + '-yes">Yes</label>' +
+        '</div>' +
+        '<div class="conditional" id="' + c.key + '-detail">' +
+          '<textarea name="' + c.key + '_detail" placeholder="' + c.ph + '" style="min-height:64px; margin-top:10px;"></textarea>' +
+        '</div>';
+      card.appendChild(field);
+    });
+  })();
 
-  const tradeState = {
-    selected: new Set(),  // names from TRADES list
-    counts: {},           // { 'Framer': 4, ... }
-    customs: []           // [{ id, name, count }, ...]
-  };
-  let _customId = 0;
+  // ── CONDITIONAL TOGGLES (Yes reveals detail) ──────────────
+  function wireToggle(flagName, detailId) {
+    document.querySelectorAll('[name="' + flagName + '"]').forEach(r =>
+      r.addEventListener('change', () =>
+        document.getElementById(detailId).classList.toggle('visible', r.value === 'Yes' && r.checked)));
+  }
+  wireToggle('nearmiss_flag', 'nearmiss-detail');
+  wireToggle('pmneeded_flag', 'pmneeded-detail');
+  ISSUE_CATEGORIES.forEach(c => wireToggle(c.key + '_flag', c.key + '-detail'));
 
-  const tradeModal      = document.getElementById('trade-modal');
-  const tradeListEl     = document.getElementById('trade-list');
-  const tradeSearch     = document.getElementById('trade-search');
-  const selectedListEl  = document.getElementById('selected-trades-list');
-  const pickerBtn       = document.getElementById('open-trade-picker');
-  const pickerBtnText   = document.getElementById('trade-picker-btn-text');
-  const addCustomBtn    = document.getElementById('add-custom-trade');
-  const manpowerHidden  = document.getElementById('manpower-hidden');
+  document.getElementById('job-select').addEventListener('change', function() {
+    document.getElementById('job-other-detail').classList.toggle('visible', this.value === 'Other');
+  });
+
+  // ── LOOK-AHEAD: ADD / REMOVE WEEKS ────────────────────────
+  let weekSeq = 3;   // highest week index created (weeks 1–3 are static)
+  const lookaheadField = document.getElementById('f-lookahead');
+  const weekAddWrap = document.getElementById('week-add-wrap');
+
+  function renumberWeeks() {
+    lookaheadField.querySelectorAll('.week-block').forEach((b, i) => {
+      const tag = b.querySelector('.week-tag');
+      if (tag) tag.textContent = 'Week ' + (i + 1);
+    });
+  }
+  function makeWeekBlock(seq) {
+    const block = document.createElement('div');
+    block.className = 'week-block';
+    block.innerHTML =
+      '<div class="week-head">' +
+        '<span class="week-tag">Week ' + seq + '</span>' +
+        '<button type="button" class="week-remove" aria-label="Remove week">&times;</button>' +
+      '</div>' +
+      '<div class="week-dates-row">' +
+        '<div><span class="mini-label">Start</span><input type="date" class="week-date" name="wk' + seq + '_start" data-carry="1"></div>' +
+        '<div><span class="mini-label">End</span><input type="date" class="week-date" name="wk' + seq + '_end" data-carry="1"></div>' +
+      '</div>' +
+      '<textarea name="wk' + seq + '_scope" data-carry="1" placeholder="Scope of work by trade for Week ' + seq + '…"></textarea>';
+    block.querySelector('.week-remove').addEventListener('click', () => {
+      block.remove(); renumberWeeks(); updateProg();
+    });
+    block.querySelector('textarea').addEventListener('input', updateProg);
+    return block;
+  }
+  function addWeek(seq) {
+    if (seq == null) { weekSeq++; seq = weekSeq; }
+    const b = makeWeekBlock(seq);
+    lookaheadField.insertBefore(b, weekAddWrap);
+    renumberWeeks();
+    return b;
+  }
+  document.getElementById('add-week').addEventListener('click', () => {
+    const b = addWeek();
+    const ta = b.querySelector('textarea');
+    if (ta) ta.focus();
+  });
+
+  // ── CARRY-OVER (localStorage) ─────────────────────────────
+  // Saves the recurring/stable fields so next week auto-fills:
+  //   the full 3-week look-ahead + standing sub-meeting day/time/attendees.
+  function collectCarryOver() {
+    const out = {};
+    document.querySelectorAll('#report-form [data-carry="1"]').forEach(el => { out[el.name] = el.value; });
+    return out;
+  }
+  async function saveCarryOver(username) {
+    if (!username) return;
+    const payload = JSON.stringify({ savedAt: new Date().toISOString(), fields: collectCarryOver() });
+    try { localStorage.setItem(STORAGE_PREFIX + username, payload); } catch (e) { /* non-fatal */ }
+    if (!API_ON) return;
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (WRITE_KEY) headers['X-Finesse-Key'] = WRITE_KEY;
+      await fetch(API_BASE + '/entry?user=' + encodeURIComponent(username), { method: 'PUT', headers, body: payload });
+    } catch (e) { /* offline — localStorage still holds it */ }
+  }
+  // Apply a saved entry to the form (rolls the look-ahead forward one week).
+  function applyCarryOver(data) {
+    const fields = (data && data.fields) || {};
+    // How many weeks were saved last time.
+    const weekIdxs = Object.keys(fields)
+      .map(k => { const m = k.match(/^wk(\d+)_/); return m ? +m[1] : 0; })
+      .filter(x => x > 0);
+    const savedMax = weekIdxs.length ? Math.max(...weekIdxs) : 3;
+    const count = Math.max(3, savedMax);   // keep the same number of week blocks
+    // Make sure that many week blocks exist.
+    for (let n = 4; n <= count; n++) {
+      if (!document.querySelector('[name="wk' + n + '_scope"]')) addWeek(n);
+    }
+    if (count > weekSeq) weekSeq = count;
+    // ROLL FORWARD one week: this Week i <- last week's Week (i+1).
+    // Last week's Week 1 drops off; the final week comes in blank to fill.
+    let filled = 0;
+    const WK_PARTS = ['start', 'end', 'scope'];
+    for (let i = 1; i <= count; i++) {
+      WK_PARTS.forEach(part => {
+        const el = document.querySelector('[name="wk' + i + '_' + part + '"]');
+        if (!el) return;
+        const src = (i < count) ? (fields['wk' + (i + 1) + '_' + part] || '') : '';
+        el.value = src;
+        if (src) filled++;
+      });
+    }
+    // Standing sub-meeting (and any non-week carry field) loads verbatim.
+    Object.keys(fields).forEach(name => {
+      if (/^wk\d+_/.test(name)) return;
+      const el = document.querySelector('#report-form [name="' + name + '"]');
+      if (el && fields[name]) { el.value = fields[name]; filled++; }
+    });
+    if (filled > 0) {
+      const banner = document.getElementById('carry-banner');
+      const when = data.savedAt ? new Date(data.savedAt) : null;
+      if (when && !isNaN(when)) {
+        document.getElementById('carry-banner-text').textContent =
+          'Rolled your look-ahead forward from ' + when.toLocaleDateString() + ". Last week's Week 1 dropped off — fill in and date the new final week.";
+      }
+      banner.classList.add('visible');
+    }
+  }
+
+  // Pull the super's last entry (backend if configured, else this device) then apply it.
+  async function loadCarryOver(username) {
+    let data = null;
+    if (API_ON) {
+      try {
+        const res = await fetch(API_BASE + '/entry?user=' + encodeURIComponent(username));
+        if (res.ok) { const j = await res.json(); if (j && j.fields) data = j; }
+      } catch (e) { /* backend unreachable — fall back to device cache */ }
+    }
+    if (!data) {
+      try { const raw = localStorage.getItem(STORAGE_PREFIX + username); if (raw) data = JSON.parse(raw); } catch (e) {}
+    }
+    if (data) applyCarryOver(data);
+  }
+
+  // ── INSPECTIONS (dynamic rows) ────────────────────────────
+  const inspectionState = [];   // [{ id, date, name, result, followup }]
+  let _inspId = 0;
+  const inspectionListEl = document.getElementById('inspection-list');
+  const inspectionsHidden = document.getElementById('inspections-hidden');
 
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
-  // Build trade list (once)
-  (function buildTradeList() {
-    TRADES.forEach(name => {
-      const opt = document.createElement('label');
-      opt.className = 'trade-option';
-      opt.dataset.tradeName = name.toLowerCase();
-      opt.innerHTML = `<input type="checkbox" data-trade="${escapeHtml(name)}"><span>${escapeHtml(name)}</span>`;
-      tradeListEl.appendChild(opt);
-    });
-    const empty = document.createElement('div');
-    empty.className = 'trade-option-empty';
-    empty.id = 'trade-empty-msg';
-    empty.textContent = 'No trades match. Use "Add custom trade" instead.';
-    tradeListEl.appendChild(empty);
-  })();
-
-  // Filter as you type
-  tradeSearch.addEventListener('input', () => {
-    const q = tradeSearch.value.trim().toLowerCase();
-    let visible = 0;
-    tradeListEl.querySelectorAll('.trade-option').forEach(opt => {
-      const match = !q || opt.dataset.tradeName.includes(q);
-      opt.classList.toggle('hidden', !match);
-      if (match) visible++;
-    });
-    document.getElementById('trade-empty-msg').classList.toggle('visible', visible === 0);
-  });
-
-  function openTradeModal() {
-    // Sync checkboxes with current selection
-    tradeListEl.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-      cb.checked = tradeState.selected.has(cb.dataset.trade);
-    });
-    tradeSearch.value = '';
-    tradeListEl.querySelectorAll('.trade-option').forEach(o => o.classList.remove('hidden'));
-    document.getElementById('trade-empty-msg').classList.remove('visible');
-    tradeModal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-  }
-  function closeTradeModal() {
-    tradeModal.classList.remove('active');
-    document.body.style.overflow = '';
-  }
-
-  pickerBtn.addEventListener('click', openTradeModal);
-  document.getElementById('close-trade-picker').addEventListener('click', closeTradeModal);
-  tradeModal.addEventListener('click', e => { if (e.target === tradeModal) closeTradeModal(); });
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && tradeModal.classList.contains('active')) closeTradeModal();
-  });
-
-  // Done button — commit selection
-  document.getElementById('done-trade-picker').addEventListener('click', () => {
-    const newSet = new Set();
-    tradeListEl.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => newSet.add(cb.dataset.trade));
-    // Drop counts for trades that were unselected; preserve existing ones
-    Object.keys(tradeState.counts).forEach(name => { if (!newSet.has(name)) delete tradeState.counts[name]; });
-    newSet.forEach(name => { if (!(name in tradeState.counts)) tradeState.counts[name] = ''; });
-    tradeState.selected = newSet;
-    renderSelected();
-    closeTradeModal();
-  });
-
-  addCustomBtn.addEventListener('click', () => {
-    tradeState.customs.push({ id: ++_customId, name: '', count: '' });
-    renderSelected();
-    // Focus the new name input
+  document.getElementById('add-inspection').addEventListener('click', () => {
+    inspectionState.push({ id: ++_inspId, date: '', name: '', result: '', followup: '', notes: '' });
+    renderInspections();
     setTimeout(() => {
-      const inputs = selectedListEl.querySelectorAll('.selected-trade-name-input');
-      const last = inputs[inputs.length - 1];
-      if (last) last.focus();
+      const rows = inspectionListEl.querySelectorAll('.dyn-row');
+      const last = rows[rows.length - 1];
+      if (last) { const inp = last.querySelector('input'); if (inp) inp.focus(); }
     }, 0);
   });
 
-  function renderSelected() {
-    selectedListEl.innerHTML = '';
-    // Master list trades — render in TRADES order for stable display
-    TRADES.forEach(name => {
-      if (!tradeState.selected.has(name)) return;
+  function renderInspections() {
+    inspectionListEl.innerHTML = '';
+    inspectionState.forEach(r => {
       const row = document.createElement('div');
-      row.className = 'selected-trade-row';
-      row.innerHTML = `
-        <span class="selected-trade-name" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
-        <input type="number" class="selected-trade-count" min="0" max="999" inputmode="numeric" pattern="[0-9]*" placeholder="#" data-trade="${escapeHtml(name)}" value="${escapeHtml(tradeState.counts[name] || '')}">
-        <button type="button" class="trade-remove-btn" data-remove-trade="${escapeHtml(name)}" aria-label="Remove ${escapeHtml(name)}">&times;</button>
-      `;
-      selectedListEl.appendChild(row);
+      row.className = 'dyn-row';
+      row.innerHTML =
+        '<button type="button" class="dyn-remove" data-remove-insp="' + r.id + '" aria-label="Remove row">&times;</button>' +
+        '<div class="dyn-grid">' +
+          '<div><span class="mini-label">Date</span><input type="text" data-insp-id="' + r.id + '" data-insp-field="date" placeholder="MM/DD" value="' + escapeHtml(r.date) + '"></div>' +
+          '<div><span class="mini-label">Result</span>' +
+            '<select data-insp-id="' + r.id + '" data-insp-field="result">' +
+              '<option value=""' + (r.result===''?' selected':'') + '>—</option>' +
+              '<option value="Pass"' + (r.result==='Pass'?' selected':'') + '>Pass</option>' +
+              '<option value="Fail"' + (r.result==='Fail'?' selected':'') + '>Fail</option>' +
+              '<option value="Scheduled"' + (r.result==='Scheduled'?' selected':'') + '>Scheduled</option>' +
+            '</select>' +
+          '</div>' +
+          '<div class="full"><span class="mini-label">Inspection / Test</span><input type="text" data-insp-id="' + r.id + '" data-insp-field="name" placeholder="e.g. Rough electrical" value="' + escapeHtml(r.name) + '"></div>' +
+          '<div class="full"><span class="mini-label">Follow-up</span><input type="text" data-insp-id="' + r.id + '" data-insp-field="followup" placeholder="Follow-up needed (optional)" value="' + escapeHtml(r.followup) + '"></div>' +
+          '<div class="full"><span class="mini-label">Notes</span><input type="text" data-insp-id="' + r.id + '" data-insp-field="notes" placeholder="If failed, why? Any other notes…" value="' + escapeHtml(r.notes) + '"></div>' +
+        '</div>';
+      inspectionListEl.appendChild(row);
     });
-    // Custom trades
-    tradeState.customs.forEach(c => {
-      const row = document.createElement('div');
-      row.className = 'selected-trade-row';
-      row.innerHTML = `
-        <input type="text" class="selected-trade-name-input" placeholder="Trade name" data-custom-id="${c.id}" data-custom-field="name" value="${escapeHtml(c.name)}">
-        <input type="number" class="selected-trade-count" min="0" max="999" inputmode="numeric" pattern="[0-9]*" placeholder="#" data-custom-id="${c.id}" data-custom-field="count" value="${escapeHtml(c.count)}">
-        <button type="button" class="trade-remove-btn" data-remove-custom="${c.id}" aria-label="Remove custom trade">&times;</button>
-      `;
-      selectedListEl.appendChild(row);
+    inspectionListEl.querySelectorAll('[data-insp-id]').forEach(inp => {
+      const handler = () => {
+        const r = inspectionState.find(x => String(x.id) === inp.dataset.inspId);
+        if (!r) return;
+        r[inp.dataset.inspField] = inp.value;
+        syncInspections(); updateProg();
+      };
+      inp.addEventListener('input', handler);
+      inp.addEventListener('change', handler);
     });
-
-    // Wire up inputs
-    selectedListEl.querySelectorAll('input[data-trade]').forEach(inp => {
-      inp.addEventListener('input', () => {
-        tradeState.counts[inp.dataset.trade] = inp.value;
-        syncManpower();
-        updateProg();
-      });
-    });
-    selectedListEl.querySelectorAll('input[data-custom-id]').forEach(inp => {
-      inp.addEventListener('input', () => {
-        const c = tradeState.customs.find(x => String(x.id) === inp.dataset.customId);
-        if (!c) return;
-        c[inp.dataset.customField] = inp.value;
-        syncManpower();
-        updateProg();
-      });
-    });
-    selectedListEl.querySelectorAll('[data-remove-trade]').forEach(btn => {
+    inspectionListEl.querySelectorAll('[data-remove-insp]').forEach(btn => {
       btn.addEventListener('click', () => {
-        const name = btn.getAttribute('data-remove-trade');
-        tradeState.selected.delete(name);
-        delete tradeState.counts[name];
-        renderSelected();
-        syncManpower();
-        updateProg();
+        const id = +btn.getAttribute('data-remove-insp');
+        const idx = inspectionState.findIndex(x => x.id === id);
+        if (idx > -1) inspectionState.splice(idx, 1);
+        renderInspections(); syncInspections(); updateProg();
       });
     });
-    selectedListEl.querySelectorAll('[data-remove-custom]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = +btn.getAttribute('data-remove-custom');
-        tradeState.customs = tradeState.customs.filter(c => c.id !== id);
-        renderSelected();
-        syncManpower();
-        updateProg();
-      });
-    });
-
-    // Update picker button label
-    const totalSelected = tradeState.selected.size;
-    if (totalSelected > 0) {
-      pickerBtnText.textContent = `Edit Trades (${totalSelected} from list)`;
-      pickerBtn.classList.add('has-selections');
-    } else {
-      pickerBtnText.textContent = '+ Select trades on site';
-      pickerBtn.classList.remove('has-selections');
-    }
-
-    syncManpower();
+    syncInspections();
   }
 
-  // Build the manpower string and sync to the hidden input.
-  // Trades with blank/zero counts are omitted (per spec).
-  function syncManpower() {
+  function syncInspections() {
     const lines = [];
-    TRADES.forEach(name => {
-      if (!tradeState.selected.has(name)) return;
-      const n = parseInt(tradeState.counts[name], 10);
-      if (n > 0) lines.push(`${name}: ${n}`);
+    inspectionState.forEach(r => {
+      const nm = (r.name || '').trim();
+      if (!nm) return;
+      let s = (r.date ? r.date + ' — ' : '') + nm;
+      if (r.result) s += ' [' + r.result + ']';
+      if (r.followup && r.followup.trim()) s += ' — follow-up: ' + r.followup.trim();
+      if (r.notes && r.notes.trim()) s += ' — notes: ' + r.notes.trim();
+      lines.push(s);
     });
-    tradeState.customs.forEach(c => {
-      const n = parseInt(c.count, 10);
-      const nm = (c.name || '').trim();
-      if (n > 0 && nm) lines.push(`${nm} (other): ${n}`);
-    });
-    manpowerHidden.value = lines.join('\n');
+    inspectionsHidden.value = lines.join('\n');
   }
 
   // ── PROGRESS ─────────────────────────────────────────────
-  const form = document.getElementById('checkin-form');
+  const form = document.getElementById('report-form');
   const checks = [
     () => form.querySelector('[name="super_name"]').value.trim(),
     () => {
@@ -709,12 +746,13 @@
       if (sel === 'Other') return form.querySelector('[name="job_name_other"]').value.trim();
       return sel;
     },
-    () => form.querySelector('[name="completed"]').value.trim(),
-    () => form.querySelector('[name="planned"]').value.trim(),
-    () => form.querySelector('[name="manpower"]').value.trim(),
-    () => form.querySelector('[name="delays"]').value.trim(),
-    () => form.querySelector('[name="attention"]').value.trim(),
-    () => form.querySelector('[name="inspections_flag"]:checked') ? form.querySelector('[name="inspections_flag"]:checked').value : '',
+    () => form.querySelector('[name="wk1_scope"]').value.trim(),
+    () => form.querySelector('[name="wk2_scope"]').value.trim(),
+    () => form.querySelector('[name="wk3_scope"]').value.trim(),
+    () => form.querySelector('[name="sub_meeting_notes"]').value.trim(),
+    () => form.querySelector('[name="nearmiss_flag"]:checked') ? 'x' : '',
+    () => form.querySelector('[name="decisions"]').value.trim(),
+    () => form.querySelector('[name="pmneeded_flag"]:checked') ? 'x' : '',
   ];
   function updateProg() {
     const n = checks.filter(fn => !!fn()).length;
@@ -725,23 +763,6 @@
   form.addEventListener('input', updateProg);
   form.addEventListener('change', updateProg);
 
-  // ── CONDITIONALS ─────────────────────────────────────────
-  document.getElementById('job-select').addEventListener('change', function() {
-    document.getElementById('job-other-detail').classList.toggle('visible', this.value === 'Other');
-  });
-  document.querySelectorAll('[name="inspections_flag"]').forEach(r =>
-    r.addEventListener('change', () =>
-      document.getElementById('inspections-detail').classList.toggle('visible', r.value === 'Yes' && r.checked)));
-  document.querySelectorAll('[name="safety_flag"]').forEach(r =>
-    r.addEventListener('change', () =>
-      document.getElementById('safety-detail').classList.toggle('visible', r.value === 'Yes' && r.checked)));
-  document.querySelectorAll('[name="deliveries_flag"]').forEach(r =>
-    r.addEventListener('change', () =>
-      document.getElementById('deliveries-detail').classList.toggle('visible', r.value === 'Yes' && r.checked)));
-  document.querySelectorAll('[name="sub_flag"]').forEach(r =>
-    r.addEventListener('change', () =>
-      document.getElementById('sub-detail').classList.toggle('visible', r.value === 'Yes' && r.checked)));
-
   // ── VALIDATE ─────────────────────────────────────────────
   function validate() {
     let ok = true;
@@ -751,68 +772,78 @@
       el.classList.toggle('has-error', !val);
       if (!val) ok = false;
     };
-    chk('f-name',       form.querySelector('[name="super_name"]').value.trim());
-    chk('f-job',        (() => {
+    chk('f-name', form.querySelector('[name="super_name"]').value.trim());
+    chk('f-job', (() => {
       const sel = form.querySelector('[name="job_name"]').value;
       if (sel === 'Other') return form.querySelector('[name="job_name_other"]').value.trim();
       return sel;
     })());
-    chk('f-completed',  form.querySelector('[name="completed"]').value.trim());
-    chk('f-planned',    form.querySelector('[name="planned"]').value.trim());
-    chk('f-manpower',   form.querySelector('[name="manpower"]').value.trim());
-    chk('f-delays',     form.querySelector('[name="delays"]').value.trim());
-    chk('f-attention',  form.querySelector('[name="attention"]').value.trim());
-    chk('f-inspections', form.querySelector('[name="inspections_flag"]:checked'));
+    chk('f-lookahead', form.querySelector('[name="wk1_scope"]').value.trim());
+    chk('f-nearmiss', form.querySelector('[name="nearmiss_flag"]:checked'));
+    chk('f-pmneeded', form.querySelector('[name="pmneeded_flag"]:checked'));
     return ok;
   }
 
   // ── EMAIL BODY ────────────────────────────────────────────
   function buildBody(d) {
-    const sf = d.get('safety_flag')   || 'Not answered';
-    const sd = d.get('safety_detail') || '—';
-    const df = d.get('deliveries_flag') || 'Not answered';
-    const dd = d.get('deliveries_detail') || '—';
-    const uf = d.get('sub_flag')      || 'Not answered';
-    const ud = d.get('sub_detail')    || '—';
-    const inf = d.get('inspections_flag') || 'Not answered';
-    const ind = d.get('inspections_detail') || '—';
     const jobSel = d.get('job_name');
     const jobName = jobSel === 'Other' ? (d.get('job_name_other') || 'Other') : jobSel;
-    return `FINESSE CONSTRUCTION — FIELD CHECK-IN
+    const val = k => (d.get(k) || '').trim() || '—';
+    const yn = (flag, detail) => {
+      const f = d.get(flag) || 'Not answered';
+      const dt = (d.get(detail) || '').trim();
+      return f === 'Yes' ? ('Yes' + (dt ? ' — ' + dt : '')) : f;
+    };
+    const usDate = s => { s = (s || '').trim(); if (!s) return ''; const p = s.split('-'); return (p.length === 3) ? (p[1] + '/' + p[2] + '/' + p[0]) : s; };
+    const weekBlocks = document.querySelectorAll('#f-lookahead .week-block');
+    let weeksStr = '';
+    weekBlocks.forEach((b, i) => {
+      const st = usDate(b.querySelector('input[name$="_start"]') ? b.querySelector('input[name$="_start"]').value : '');
+      const en = usDate(b.querySelector('input[name$="_end"]') ? b.querySelector('input[name$="_end"]').value : '');
+      const range = (st || en) ? (st + ' – ' + en) : '';
+      const scope = (b.querySelector('textarea') ? b.querySelector('textarea').value.trim() : '') || '—';
+      weeksStr += 'Week ' + (i + 1) + ': ' + (range ? '(' + range + ')\n' : '') + scope + '\n\n';
+    });
+    weeksStr = weeksStr.replace(/\n+$/, '');
+    const laHeading = '01 — ' + weekBlocks.length + '-WEEK LOOK-AHEAD';
+    return `FINESSE CONSTRUCTION — SUPERINTENDENT WEEKLY REPORT
 ================================================
-Name           : ${d.get('super_name')}
-Job            : ${jobName}
-Week Ending    : ${d.get('week_date')}
+Superintendent : ${d.get('super_name')}
+Project        : ${jobName}
+Week Ending    : ${d.get('week_ending')}
+Report Date    : ${d.get('report_date')}
 
-01 — WORK COMPLETED
-${d.get('completed')}
+${laHeading}
+${weeksStr}
 
-02 — WORK PLANNED
-${d.get('planned')}
+02 — SUB MEETING
+Standing: ${val('sub_meeting_time')}
+Attendees: ${val('sub_meeting_attendees')}
+Discussed / decided this week:
+${val('sub_meeting_notes')}
 
-03 — MANPOWER ON SITE
-${d.get('manpower')}
+03 — SAFETY
+Toolbox talk topics: ${val('toolbox_topics')}
+Near-misses this week: ${yn('nearmiss_flag','nearmiss_detail')}
 
-04 — DELAYS OR BLOCKERS
-${d.get('delays')}
+04 — INSPECTIONS & TESTS
+${val('inspections')}
 
-05 — ITEMS REQUIRING IMMEDIATE PM ACTION
-${d.get('attention')}
+05 — DECISIONS / APPROVALS NEEDED
+${val('decisions')}
+PM action needed: ${yn('pmneeded_flag','pmneeded_detail')}
 
-06 — INSPECTIONS & PERMIT ACTIVITY
-${inf}${inf==='Yes'?'\nDetail: '+ind:''}
-
-07 — SAFETY ISSUES
-${sf}${sf==='Yes'?'\nDetail: '+sd:''}
-
-08 — SUBCONTRACTOR ISSUES
-${uf}${uf==='Yes'?'\nDetail: '+ud:''}
-
-09 — MATERIAL DELIVERIES
-${df}${df==='Yes'?'\nDetail: '+dd:''}
+06 — ISSUES & CONCERNS TO MITIGATE
+Open RFIs: ${yn('rfis_flag','rfis_detail')}
+Schedule delays: ${yn('schedule_flag','schedule_detail')}
+Testing issues: ${yn('testing_flag','testing_detail')}
+Sub issues: ${yn('subs_flag','subs_detail')}
+Permitting: ${yn('permitting_flag','permitting_detail')}
+Staking / survey: ${yn('staking_flag','staking_detail')}
+Other: ${yn('other_flag','other_detail')}
 
 ================================================
-Submitted via Finesse Field Check-In`;
+Submitted via Finesse Superintendent Weekly Report`;
   }
 
   // ── SUBMIT ────────────────────────────────────────────────
@@ -820,6 +851,8 @@ Submitted via Finesse Field Check-In`;
     document.getElementById('form-wrap').style.display   = 'none';
     document.getElementById('footer').style.display      = 'none';
     document.querySelector('.progress-wrap').style.display = 'none';
+    document.querySelector('.due-note').style.display    = 'none';
+    document.getElementById('carry-banner').style.display = 'none';
     document.getElementById('success-screen').style.display = 'block';
   }
 
@@ -827,22 +860,24 @@ Submitted via Finesse Field Check-In`;
     e.preventDefault();
     if (!validate()) {
       const el = form.querySelector('.has-error');
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
     const data = new FormData(form);
     const sup  = data.get('super_name');
     const jobSel = data.get('job_name');
     const job  = jobSel === 'Other' ? (data.get('job_name_other') || 'Other') : jobSel;
-    const dt   = data.get('week_date');
+    const dt   = data.get('week_ending');
     const body = buildBody(data);
+    // Save carry-over BEFORE navigating away so next week auto-fills.
+    await saveCarryOver(currentUsername);
     const overlay = document.getElementById('sending-overlay');
     overlay.classList.add('active');
     try {
       const res = await fetch(ENDPOINT, {
         method: 'POST',
         headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ _subject: `[${job}] Field Check-In — ${sup} — ${dt}`, _replyto: window._userEmail || '', _cc: window._userEmail || '', message: body })
+        body: JSON.stringify({ _subject: `[${job}] Weekly Report — ${sup} — ${dt}`, _replyto: window._userEmail || '', _cc: window._userEmail || '', message: body })
       });
       overlay.classList.remove('active');
       res.ok ? showSuccess() : fallback(sup, job, dt, body);
@@ -853,7 +888,7 @@ Submitted via Finesse Field Check-In`;
   });
 
   function fallback(sup, job, dt, body) {
-    const s = encodeURIComponent(`[${job}] Field Check-In — ${sup} — ${dt}`);
+    const s = encodeURIComponent(`[${job}] Weekly Report — ${sup} — ${dt}`);
     const b = encodeURIComponent(body);
     window.location.href = `mailto:${TO_EMAIL}?subject=${s}&body=${b}`;
     setTimeout(showSuccess, 1000);
