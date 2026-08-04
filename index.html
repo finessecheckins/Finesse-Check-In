@@ -112,12 +112,21 @@
   .dyn-remove:hover { background: #ffd9d9; }
   .add-row-btn { margin-top: 10px; width: 100%; background: transparent; border: 1px dashed var(--light-gray); color: var(--text-light); font-family: 'Open Sans', sans-serif; font-size: 13px; font-weight: 600; padding: 11px; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
   .add-row-btn:hover { border-color: var(--sky); color: var(--navy); }
+  #week-add-wrap { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+  #week-add-wrap .add-row-btn { margin-top: 0; }
+  .clear-week-btn { width: 100%; background: transparent; border: 1px solid var(--border); color: var(--text-light); font-family: 'Open Sans', sans-serif; font-size: 12px; font-weight: 600; padding: 9px; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
+  .clear-week-btn:hover { border-color: #e0a3a3; color: #c0392b; background: #fff8f8; }
 
   .submit-wrap { max-width: 640px; margin: 32px auto 0; padding: 24px 16px 0; border-top: 1px solid var(--border); }
   .submit-btn { width: 100%; background: linear-gradient(135deg, var(--navy-mid), var(--navy)); color: var(--white); border: none; font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; padding: 18px; border-radius: 8px; cursor: pointer; transition: opacity 0.2s, transform 0.1s; box-shadow: 0 4px 14px rgba(27,42,74,0.25); }
   .submit-btn:hover { opacity: 0.91; }
   .submit-btn:active { transform: scale(0.99); }
   .submit-note { text-align: center; font-size: 11px; color: var(--gray); margin-top: 10px; }
+  .submit-error { display: none; margin-top: 14px; background: #fff0f0; border: 1px solid #f5c6c6; border-radius: 8px; padding: 14px 16px; font-size: 13px; color: #c0392b; line-height: 1.55; text-align: center; }
+  .submit-error.visible { display: block; }
+  .submit-error strong { font-size: 14px; }
+  .submit-error-mail { display: inline-block; margin-top: 12px; background: transparent; border: 1px solid #e0a3a3; color: #c0392b; font-family: 'Open Sans', sans-serif; font-size: 12px; font-weight: 600; padding: 9px 14px; border-radius: 6px; cursor: pointer; }
+  .submit-error-mail:hover { background: #ffe4e4; }
 
   .success-screen { display: none; padding: 60px 24px; text-align: center; max-width: 400px; margin: 0 auto; }
   .success-icon { width: 72px; height: 72px; background: rgba(91,184,232,0.1); border: 2px solid var(--sky); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 30px; color: var(--sky-dark); }
@@ -272,7 +281,10 @@
         </div>
         <textarea name="wk3_scope" data-carry="1" placeholder="Scope of work by trade for Week 3…"></textarea>
       </div>
-      <div id="week-add-wrap"><button type="button" class="add-row-btn" id="add-week">+ Add another week</button></div>
+      <div id="week-add-wrap">
+        <button type="button" class="add-row-btn" id="add-week">+ Add another week</button>
+        <button type="button" class="clear-week-btn" id="clear-lookahead">Clear look-ahead</button>
+      </div>
       <div class="error-msg">Fill in at least Week 1 scope.</div>
     </div>
   </div>
@@ -381,6 +393,11 @@
   <div class="submit-wrap">
     <button type="submit" class="submit-btn">Submit Weekly Report</button>
     <p class="submit-note">Your report goes directly to the PM team.</p>
+    <div class="submit-error" id="submit-error">
+      <strong>It didn't send.</strong><br>
+      Nothing was lost — everything you typed is still here. Check your signal or Wi‑Fi and tap <em>Submit</em> again.
+      <button type="button" class="submit-error-mail" id="submit-error-mail">Still won't send? Email it to the office instead</button>
+    </div>
   </div>
 
 </form>
@@ -584,6 +601,19 @@
     const b = addWeek();
     const ta = b.querySelector('textarea');
     if (ta) ta.focus();
+  });
+
+  document.getElementById('clear-lookahead').addEventListener('click', () => {
+    if (!confirm('Clear the entire look-ahead? This wipes every week so you can start fresh. It does not affect anything you have already submitted.')) return;
+    lookaheadField.querySelectorAll('.week-block').forEach((b, i) => {
+      if (i >= 3) { b.remove(); return; }                 // drop extra weeks, keep the first 3
+      b.querySelectorAll('.week-date').forEach(inp => { inp.value = ''; });
+      const ta = b.querySelector('textarea'); if (ta) ta.value = '';
+    });
+    weekSeq = 3;
+    renumberWeeks();
+    syncAllDates();
+    updateProg();
   });
 
   // ── DATE FIELDS: MM/DD/YYYY placeholder + calendar icon (native picker on tap) ──
@@ -890,8 +920,12 @@ Submitted via Finesse Superintendent Weekly Report`;
     document.getElementById('success-screen').style.display = 'block';
   }
 
+  let lastMailto = '';
+  const submitBtn = form.querySelector('.submit-btn');
+
   form.addEventListener('submit', async e => {
     e.preventDefault();
+    document.getElementById('submit-error').classList.remove('visible');   // clear any prior error
     if (!validate()) {
       const el = form.querySelector('.has-error');
       if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -903,30 +937,41 @@ Submitted via Finesse Superintendent Weekly Report`;
     const job  = jobSel === 'Other' ? (data.get('job_name_other') || 'Other') : jobSel;
     const dt   = data.get('week_ending');
     const body = buildBody(data);
-    // Save carry-over BEFORE navigating away so next week auto-fills.
+    lastMailto = `mailto:${TO_EMAIL}?subject=${encodeURIComponent(`[${job}] Weekly Report — ${sup} — ${dt}`)}&body=${encodeURIComponent(body)}`;
+    // Save the look-ahead now (separate from the email; helps next week either way).
     await saveCarryOver(currentUsername);
     const overlay = document.getElementById('sending-overlay');
     overlay.classList.add('active');
+    submitBtn.disabled = true;
+    let okSent = false;
     try {
       const res = await fetch(ENDPOINT, {
         method: 'POST',
         headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ _subject: `[${job}] Weekly Report — ${sup} — ${dt}`, _replyto: window._userEmail || '', _cc: window._userEmail || '', message: body })
+        body: JSON.stringify({ _subject: `[${job}] Weekly Report — ${sup} — ${dt}`, _replyto: window._userEmail || '', message: body })
       });
-      overlay.classList.remove('active');
-      res.ok ? showSuccess() : fallback(sup, job, dt, body);
-    } catch {
-      overlay.classList.remove('active');
-      fallback(sup, job, dt, body);
+      okSent = res.ok;                       // only a real 2xx counts as sent
+    } catch (e) {
+      okSent = false;
+    }
+    overlay.classList.remove('active');
+    submitBtn.disabled = false;
+    if (okSent) {
+      showSuccess();                         // success screen ONLY on a confirmed send
+    } else {
+      const err = document.getElementById('submit-error');
+      err.classList.add('visible');          // keep all data, let them retry
+      if (err.scrollIntoView) err.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   });
 
-  function fallback(sup, job, dt, body) {
-    const s = encodeURIComponent(`[${job}] Weekly Report — ${sup} — ${dt}`);
-    const b = encodeURIComponent(body);
-    window.location.href = `mailto:${TO_EMAIL}?subject=${s}&body=${b}`;
-    setTimeout(showSuccess, 1000);
-  }
+  // Manual backup for a super whose network keeps blocking the send — opens their
+  // mail app with the whole report pre-filled. Does NOT claim success; they hit send.
+  document.getElementById('submit-error-mail').addEventListener('click', () => {
+    if (lastMailto) window.location.href = lastMailto;
+  });
+
+
 </script>
 </body>
 </html>
