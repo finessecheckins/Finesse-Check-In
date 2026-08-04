@@ -79,8 +79,12 @@
   .week-tag { font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--white); background: var(--navy-mid); padding: 5px 10px; border-radius: 5px; flex-shrink: 0; }
   .week-dates-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 9px; }
   .week-dates-row .mini-label { font-family: 'Montserrat', sans-serif; font-size: 9px; font-weight: 700; color: var(--text-light); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; display: block; }
-  .week-date { width: 100%; background: var(--white); border: 1.5px solid var(--border); color: var(--text); font-family: 'Open Sans', sans-serif; font-size: 13px; font-weight: 600; padding: 8px 10px; border-radius: 5px; outline: none; -webkit-appearance: none; appearance: none; min-height: 38px; }
-  .week-date:focus { border-color: var(--sky); box-shadow: 0 0 0 3px rgba(91,184,232,0.15); }
+  .date-field { position: relative; }
+  .date-field > .week-date { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; background: transparent; opacity: 0; cursor: pointer; -webkit-appearance: none; appearance: none; }
+  .date-field > .date-display { display: block; background: var(--white); border: 1.5px solid var(--border); border-radius: 5px; padding: 8px 34px 8px 10px; font-family: 'Open Sans', sans-serif; font-size: 13px; font-weight: 600; color: var(--text); min-height: 38px; line-height: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .date-field > .date-display[data-empty] { color: var(--light-gray); font-weight: 500; }
+  .date-field > .date-cal-ico { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--gray); pointer-events: none; }
+  .date-field:focus-within > .date-display { border-color: var(--sky); box-shadow: 0 0 0 3px rgba(91,184,232,0.15); }
   .week-block textarea { min-height: 76px; background: var(--white); }
   .week-remove { width: 26px; height: 26px; border: none; background: #fff0f0; color: #c0392b; font-size: 18px; font-weight: 700; line-height: 1; border-radius: 50%; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; }
   .week-remove:hover { background: #ffd9d9; }
@@ -572,6 +576,7 @@
     if (seq == null) { weekSeq++; seq = weekSeq; }
     const b = makeWeekBlock(seq);
     lookaheadField.insertBefore(b, weekAddWrap);
+    b.querySelectorAll('.week-date').forEach(enhanceDate);
     renumberWeeks();
     return b;
   }
@@ -580,6 +585,34 @@
     const ta = b.querySelector('textarea');
     if (ta) ta.focus();
   });
+
+  // ── DATE FIELDS: MM/DD/YYYY placeholder + calendar icon (native picker on tap) ──
+  const CAL_SVG = '<svg class="date-cal-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
+  function fmtDisp(v) { const p = (v || '').split('-'); return (p.length === 3) ? (p[1] + '/' + p[2] + '/' + p[0]) : ''; }
+  function enhanceDate(inp) {
+    if (inp.dataset.enh) return;
+    inp.dataset.enh = '1';
+    const wrap = document.createElement('div');
+    wrap.className = 'date-field';
+    inp.parentNode.insertBefore(wrap, inp);
+    const disp = document.createElement('span');
+    disp.className = 'date-display';
+    wrap.appendChild(disp);
+    wrap.insertAdjacentHTML('beforeend', CAL_SVG);
+    wrap.appendChild(inp);                       // native input sits on top, transparent
+    const sync = () => {
+      const t = fmtDisp(inp.value);
+      if (t) { disp.textContent = t; disp.removeAttribute('data-empty'); }
+      else { disp.textContent = 'MM/DD/YYYY'; disp.setAttribute('data-empty', '1'); }
+    };
+    inp.__sync = sync;
+    inp.addEventListener('input', sync);
+    inp.addEventListener('change', sync);
+    sync();
+  }
+  function enhanceAllDates() { document.querySelectorAll('.week-date').forEach(enhanceDate); }
+  function syncAllDates() { document.querySelectorAll('.week-date').forEach(i => { if (i.__sync) i.__sync(); }); }
+  enhanceAllDates();
 
   // ── CARRY-OVER (localStorage) ─────────────────────────────
   // Saves the recurring/stable fields so next week auto-fills:
@@ -642,6 +675,7 @@
       }
       banner.classList.add('visible');
     }
+    syncAllDates();
   }
 
   // Pull the super's last entry (backend if configured, else this device) then apply it.
