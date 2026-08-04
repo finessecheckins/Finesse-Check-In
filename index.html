@@ -920,6 +920,41 @@ Submitted via Finesse Superintendent Weekly Report`;
     document.getElementById('success-screen').style.display = 'block';
   }
 
+  // Save the full submitted report to the Worker so the shared dashboard can read it
+  // (independent of the email — works even if Formspree is blocked on this network).
+  async function sendReportToWorker(d, body, job, sup, dt) {
+    if (!API_ON) return;
+    const concerns = [];
+    ISSUE_CATEGORIES.forEach(c => {
+      if ((d.get(c.key + '_flag') || '') === 'Yes') {
+        const det = (d.get(c.key + '_detail') || '').trim();
+        concerns.push(c.label + (det ? ' — ' + det : ''));
+      }
+    });
+    const inspections = (d.get('inspections') || '').split('\n').map(x => x.trim()).filter(Boolean);
+    const look = [];
+    document.querySelectorAll('#f-lookahead .week-block').forEach((b, i) => {
+      const s = b.querySelector('input[name$="_start"]'), e = b.querySelector('input[name$="_end"]'), t = b.querySelector('textarea');
+      look.push({ week: i + 1, start: s ? s.value : '', end: e ? e.value : '', scope: t ? t.value.trim() : '' });
+    });
+    const rep = {
+      username: currentUsername, name: sup, project: job,
+      weekEnding: dt, reportDate: d.get('report_date'), submittedAt: new Date().toISOString(),
+      pmAction: d.get('pmneeded_flag') || 'No', pmDetail: (d.get('pmneeded_detail') || '').trim(),
+      nearMiss: d.get('nearmiss_flag') || 'No', nearMissDetail: (d.get('nearmiss_detail') || '').trim(),
+      concerns: concerns, inspections: inspections, lookahead: look,
+      subMeeting: { time: (d.get('sub_meeting_time') || '').trim(), attendees: (d.get('sub_meeting_attendees') || '').trim(), notes: (d.get('sub_meeting_notes') || '').trim() },
+      toolbox: (d.get('toolbox_topics') || '').trim(),
+      decisions: (d.get('decisions') || '').trim(),
+      text: body
+    };
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (WRITE_KEY) headers['X-Finesse-Key'] = WRITE_KEY;
+      await fetch(API_BASE + '/report', { method: 'PUT', headers, body: JSON.stringify(rep) });
+    } catch (e) { /* dashboard store is best-effort */ }
+  }
+
   let lastMailto = '';
   const submitBtn = form.querySelector('.submit-btn');
 
@@ -940,6 +975,7 @@ Submitted via Finesse Superintendent Weekly Report`;
     lastMailto = `mailto:${TO_EMAIL}?subject=${encodeURIComponent(`[${job}] Weekly Report — ${sup} — ${dt}`)}&body=${encodeURIComponent(body)}`;
     // Save the look-ahead now (separate from the email; helps next week either way).
     await saveCarryOver(currentUsername);
+    await sendReportToWorker(data, body, job, sup, dt);
     const overlay = document.getElementById('sending-overlay');
     overlay.classList.add('active');
     submitBtn.disabled = true;
