@@ -444,10 +444,6 @@
     'dgreathouse':  { pin: '3282', name: 'Doug Greathouse',  email: 'dg@finesseconstruction.com',   defaultJob: 'Sherman Place' },
   };
 
-  // Every submitted report is CC'd to everyone on the credentials list (top to bottom).
-  // Add or remove a person in USERS above and this list follows automatically.
-  const CC_ALL = Object.values(USERS).map(u => u.email).filter(Boolean).join(',');
-
   const STORAGE_PREFIX = 'finesse_weekly_';   // per-username carry-over key
   let loginAttempts = 0;
   const MAX_ATTEMPTS = 5;
@@ -1011,7 +1007,7 @@ Submitted via Finesse Superintendent Weekly Report`;
       const res = await fetch(ENDPOINT, {
         method: 'POST',
         headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ _subject: `[${job}] Weekly Report — ${sup} — ${dt}`, _replyto: window._userEmail || '', _cc: CC_ALL, message: body })
+        body: JSON.stringify({ _subject: `[${job}] Weekly Report — ${sup} — ${dt}`, _replyto: window._userEmail || '', _cc: window._userEmail || '', message: body })
       });
       okSent = res.ok;                       // only a real 2xx counts as sent
     } catch (e) {
