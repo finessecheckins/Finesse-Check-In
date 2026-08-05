@@ -132,6 +132,11 @@
   .success-icon { width: 72px; height: 72px; background: rgba(91,184,232,0.1); border: 2px solid var(--sky); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 30px; color: var(--sky-dark); }
   .success-screen h2 { font-family: 'Montserrat', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: 2px; color: var(--navy); text-transform: uppercase; margin-bottom: 12px; }
   .success-screen p { font-size: 14px; color: var(--text-light); line-height: 1.7; }
+  .success-crm { font-weight: 700; color: var(--navy) !important; }
+  .copy-report-btn { margin: 4px auto 12px; background: var(--navy); color: var(--white); border: none; font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 12px 22px; border-radius: 6px; cursor: pointer; }
+  .copy-report-btn:hover { background: var(--navy-mid); }
+  .copy-report-btn.copied { background: #1f7a45; }
+  .report-box { text-align: left; white-space: pre-wrap; font-family: ui-monospace, Menlo, monospace; font-size: 12px; line-height: 1.5; color: #2b3a52; background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; max-height: 320px; overflow: auto; margin-top: 4px; }
 
   .sending-overlay { display: none; position: fixed; inset: 0; background: rgba(27,42,74,0.75); z-index: 200; align-items: center; justify-content: center; flex-direction: column; gap: 16px; }
   .sending-overlay.active { display: flex; }
@@ -407,6 +412,9 @@
   <div class="success-icon">✓</div>
   <h2>Submitted</h2>
   <p>Your weekly report has been received by the PM team. Your look-ahead and standing meeting are saved on this device and will load next week.</p>
+  <p class="success-crm">Copy your report below and paste it into the comments section of the CRM.</p>
+  <button type="button" class="copy-report-btn" id="copy-report-btn">Copy report</button>
+  <pre class="report-box" id="success-report"></pre>
 </div>
 
 <div class="sending-overlay" id="sending-overlay">
@@ -425,7 +433,7 @@
     'rmiranda':     { pin: '4351', name: 'Robert Miranda',   email: 'rm@finesseconstruction.com' },
     'smorris':      { pin: '1913', name: 'Steve Morris',     email: 'sm@finesseconstruction.com' },
     'jgullion':     { pin: '4111', name: 'Joe Gullion',      email: 'jg@finesseconstruction.com' },
-    'dsimons':      { pin: '9210', name: 'Darryl Simons',    email: 'darryl@finesseconstruction.com' },
+    'dsimons':      { pin: '9210', name: 'Darryl Simons',    email: 'ds@finesseconstruction.com' },
     'ccostenbader': { pin: '4420', name: 'Cody Costenbader', email: 'cody@finesseconstruction.com' },
     'jbrown':       { pin: '2340', name: 'Jared Brown',      email: 'jared@finesseconstruction.com' },
     'mdesha':       { pin: '9886', name: 'Myles DeSha',      email: 'md@finesseconstruction.com' },
@@ -435,6 +443,10 @@
     'bmillwood':    { pin: '4954', name: 'Bill Millwood',    email: 'bill@finesseconstruction.com', defaultJob: 'Palo on 75th' },
     'dgreathouse':  { pin: '3282', name: 'Doug Greathouse',  email: 'dg@finesseconstruction.com',   defaultJob: 'Sherman Place' },
   };
+
+  // Every submitted report is CC'd to everyone on the credentials list (top to bottom).
+  // Add or remove a person in USERS above and this list follows automatically.
+  const CC_ALL = Object.values(USERS).map(u => u.email).filter(Boolean).join(',');
 
   const STORAGE_PREFIX = 'finesse_weekly_';   // per-username carry-over key
   let loginAttempts = 0;
@@ -920,6 +932,21 @@ Submitted via Finesse Superintendent Weekly Report`;
     document.getElementById('success-screen').style.display = 'block';
   }
 
+  document.getElementById('copy-report-btn').addEventListener('click', async () => {
+    const txt = document.getElementById('success-report').textContent || '';
+    const btn = document.getElementById('copy-report-btn');
+    try { await navigator.clipboard.writeText(txt); }
+    catch (e) {
+      const r = document.getElementById('success-report');
+      const sel = window.getSelection(), range = document.createRange();
+      range.selectNodeContents(r); sel.removeAllRanges(); sel.addRange(range);
+      try { document.execCommand('copy'); } catch (e2) {}
+      sel.removeAllRanges();
+    }
+    btn.textContent = 'Copied ✓'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy report'; btn.classList.remove('copied'); }, 2000);
+  });
+
   // Save the full submitted report to the Worker so the shared dashboard can read it
   // (independent of the email — works even if Formspree is blocked on this network).
   async function sendReportToWorker(d, body, job, sup, dt) {
@@ -984,7 +1011,7 @@ Submitted via Finesse Superintendent Weekly Report`;
       const res = await fetch(ENDPOINT, {
         method: 'POST',
         headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ _subject: `[${job}] Weekly Report — ${sup} — ${dt}`, _replyto: window._userEmail || '', message: body })
+        body: JSON.stringify({ _subject: `[${job}] Weekly Report — ${sup} — ${dt}`, _replyto: window._userEmail || '', _cc: CC_ALL, message: body })
       });
       okSent = res.ok;                       // only a real 2xx counts as sent
     } catch (e) {
@@ -993,6 +1020,7 @@ Submitted via Finesse Superintendent Weekly Report`;
     overlay.classList.remove('active');
     submitBtn.disabled = false;
     if (okSent) {
+      document.getElementById('success-report').textContent = body;   // show report to copy into CRM
       showSuccess();                         // success screen ONLY on a confirmed send
     } else {
       const err = document.getElementById('submit-error');
