@@ -38,6 +38,8 @@
   .toolbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
   .toolbar h2 { font-family:'Montserrat',sans-serif; font-size:14px; font-weight:800; color:var(--navy); }
   .toolbar .week { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-top:3px; }
+  .week-select { margin-top:5px; font-family:'Open Sans',sans-serif; font-size:12px; font-weight:600; color:var(--navy); background:var(--card); border:1px solid var(--border); border-radius:6px; padding:6px 10px; cursor:pointer; outline:none; }
+  .week-select:focus { border-color:var(--sky); }
   .refresh { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:9px 14px; font-size:12px; font-weight:700; color:var(--navy); cursor:pointer; }
   .refresh:hover { border-color:var(--sky); }
   .asof { font-size:11px; color:var(--muted); margin-left:10px; }
@@ -113,7 +115,7 @@
 <div id="app" style="display:none;">
   <div class="wrap">
     <div class="toolbar">
-      <div><h2>Weekly Report Dashboard</h2><div class="week" id="week">—</div></div>
+      <div><h2>Weekly Report Dashboard</h2><select id="week-select" class="week-select" onchange="loadWeek(this.value)"></select></div>
       <div><button class="refresh" onclick="reload()">↻ Refresh</button><span class="asof" id="asof"></span></div>
     </div>
     <div id="content"><div class="state"><div class="spin"></div>Loading this week's reports…</div></div>
@@ -161,21 +163,34 @@
     document.getElementById('u').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('p').focus(); });
   });
 
-  async function reload(){
-    const target=currentWeekEnding();
-    document.getElementById('week').textContent='Week ending '+target;
-    document.getElementById('content').innerHTML='<div class="state"><div class="spin"></div>Loading this week\'s reports…</div>';
+  let allWeeks=[];
+  async function loadWeeks(){
+    let weeks=[];
+    try{ const r=await fetch(API_BASE+'/weeks'); const j=await r.json(); weeks=(j&&j.weeks)||[]; }catch(e){ weeks=[]; }
+    const cur=currentWeekEnding();
+    if(!weeks.includes(cur)) weeks.unshift(cur);   // always offer the current week
+    allWeeks=weeks;
+    const sel=document.getElementById('week-select');
+    sel.innerHTML=weeks.map(w=>'<option value="'+w+'">'+(w===cur?('This week — '+w):('Week ending '+w))+'</option>').join('');
+    sel.value=cur;
+  }
+  async function loadWeek(week){
+    document.getElementById('content').innerHTML='<div class="state"><div class="spin"></div>Loading reports…</div>';
     let reports=[];
     try{
-      const res=await fetch(API_BASE+'/reports?week='+encodeURIComponent(target));
+      const res=await fetch(API_BASE+'/reports?week='+encodeURIComponent(week));
       const j=await res.json();
       reports=(j&&j.reports)||[];
     }catch(err){
       document.getElementById('content').innerHTML='<div class="state">Couldn\'t load reports right now.<br><br>'+esc(err.message)+'<br><br>Tap Refresh to try again.</div>';
       return;
     }
-    render(target, reports);
+    render(week, reports);
     document.getElementById('asof').textContent='as of '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+  }
+  async function reload(){
+    await loadWeeks();
+    await loadWeek(document.getElementById('week-select').value);
   }
 
   function timeShort(iso){ try{ const d=new Date(iso); return d.toLocaleDateString([], {weekday:'short'})+' '+d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}); }catch(e){ return ''; } }
