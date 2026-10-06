@@ -60,6 +60,38 @@ select,.btn,input,textarea{font-family:inherit}
 .f.grow{width:100%}
 .ta{border:1px solid var(--line);background:transparent;padding:7px 8px;font-size:13px;width:100%;resize:vertical;min-height:60px;color:var(--ink)}
 .ta:focus{outline:none;border-color:var(--blue);background:#f9fcfe}
+/* single-line fields that wrap instead of cutting off */
+textarea.f{display:block;resize:none;overflow:hidden;line-height:1.35;font-family:inherit;white-space:pre-wrap;overflow-wrap:anywhere;min-height:0;height:auto}
+table.est textarea.desc{overflow:hidden}
+
+/* page-break preview */
+.pbreak{position:absolute;left:0;right:0;height:0;border-top:2px dashed #c9731f;pointer-events:none;z-index:6}
+.pbreak span{position:absolute;right:8px;top:-20px;font-size:11px;line-height:1;background:#c9731f;color:#fff;padding:4px 7px;border-radius:4px;white-space:nowrap}
+.pb-moved{outline:2px dashed rgba(201,115,31,.6);outline-offset:3px}
+.pbf{box-shadow:0 -3px 0 #c9731f}
+#pbBtn{position:absolute;z-index:7;display:none;font-size:11px;padding:3px 7px;border-radius:4px;border:1px solid #c9731f;background:#fff;color:#a35a14;cursor:pointer;white-space:nowrap}
+#pbBtn:hover{background:#fdf1e4}
+#pbCount{font-size:12px;color:var(--navy);font-weight:600;display:none}
+body.pv #pbCount{display:inline}
+.btn.on{background:#c9731f;color:#fff}
+@media screen{
+body.pv .workspace{overflow-x:auto}
+body.pv .sheet{position:relative;width:8.5in;max-width:none;padding:.45in .55in}
+body.pv .sheet .f{border-bottom:1px solid #333;font-size:12px}
+body.pv .sheet .ta{border:1px solid #999}
+body.pv #co-owner .ta,body.pv #co-sub .ta,body.pv #ccd .ta{min-height:70px !important}
+body.pv .sheet table.form{min-width:0}
+body.pv .sheet table.form td,body.pv .sheet table.form th{padding:5px 7px}
+body.pv .sheet .doc-title{margin:0 0 10px;font-size:18px}
+body.pv .sheet .lh{margin-bottom:12px;padding-bottom:10px}
+body.pv .sheet .legal{font-size:11px;margin:5px 0;line-height:1.5}
+body.pv .sheet .sigwrap{margin-top:18px;gap:22px 30px}
+body.pv .sheet [style*="height:24px"]{height:18px !important}
+body.pv .sheet [style*="margin-bottom:20px"]{margin-bottom:16px !important}
+body.pv .sheet .sigslot{height:20px}
+body.pv .sheet .note,body.pv .sheet .valid{margin-top:8px}
+body.pv .sheet .notice{margin-bottom:10px;padding:7px 9px}
+}
 .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);display:block;margin-bottom:1px}
 .money-in{width:130px;text-align:right}
 
@@ -134,11 +166,11 @@ table.est input:focus,table.est textarea:focus{outline:1px solid var(--blue);bac
 }
 
 @media print{
-  @page{size:letter;margin:0}
+  @page{size:letter;margin:.45in .55in}
   html,body{background:#fff}
   .no-print{display:none !important}
   .workspace{padding:0}
-  .sheet{box-shadow:none;border:none;margin:0;width:auto;min-height:0;padding:.45in .55in}
+  .sheet{box-shadow:none;border:none;margin:0;width:auto;min-height:0;padding:0}
   .sheet.active{display:block}
   .f{border-bottom:1px solid #333;background:none !important;font-size:12px}
   .ta{border:1px solid #999}
@@ -156,11 +188,14 @@ table.est input:focus,table.est textarea:focus{outline:1px solid var(--blue);bac
 
   .note,.valid{margin-top:8px}
   .notice{margin-bottom:10px;padding:7px 9px}
-  table.form,.notice,.wtitle{break-inside:avoid}
-  .sigline{break-inside:avoid}
+  table.form:not(.split),.notice,.wtitle,table.form tr{break-inside:avoid}
+  table.split thead{display:table-header-group}
+  .sigline,.sigwrap>div{break-inside:avoid}
+  .pbf{break-before:page;page-break-before:always;box-shadow:none}
+  .pbreak,#pbBtn{display:none !important}
   .del,.est-del-col{display:none !important}
   input:focus,textarea:focus{outline:none !important;background:none !important}
-  #rfiResponse{break-before:page;page-break-before:always;padding-top:.5in}
+  #rfiResponse{break-before:page;page-break-before:always}
 }
 </style>
 </head>
@@ -186,6 +221,8 @@ table.est input:focus,table.est textarea:focus{outline:1px solid var(--blue);bac
 <div class="actionbar no-print">
   <button class="btn primary" id="printBtn">Print / Save as PDF</button>
   <button class="btn" id="resetBtn">Clear this form</button>
+  <button class="btn" id="pvToggle" title="Shows the page layout used for printing, with page-break lines">Show page breaks</button>
+  <span id="pbCount"></span>
   <span class="hint">Fields left blank on the printout are for wet signatures.</span>
 </div>
 
@@ -239,18 +276,17 @@ table.est input:focus,table.est textarea:focus{outline:1px solid var(--blue);bac
       <div class="field"><span class="lbl">To (Architect / Engineer)</span><input class="f grow" data-proj="architect"></div>
       <div class="field"><span class="lbl">From</span><input class="f grow" data-proj="poc"></div>
     </div>
-    <div class="tscroll"><table class="form">
-      <tr><th style="width:12%">Item</th><th>Description</th><th style="width:22%">Manufacturer</th><th style="width:14%">Spec Section</th></tr>
-      <tr><td><input class="f grow"></td><td><input class="f grow"></td><td><input class="f grow"></td><td><input class="f grow"></td></tr>
-      <tr><td><input class="f grow"></td><td><input class="f grow"></td><td><input class="f grow"></td><td><input class="f grow"></td></tr>
-      <tr><td><input class="f grow"></td><td><input class="f grow"></td><td><input class="f grow"></td><td><input class="f grow"></td></tr>
-      <tr><td><input class="f grow"></td><td><input class="f grow"></td><td><input class="f grow"></td><td><input class="f grow"></td></tr>
+    <div class="tscroll"><table class="form split">
+      <thead><tr><th style="width:9%">Item</th><th>Description</th><th style="width:18%">Manufacturer</th><th style="width:12%">Spec Section</th><th style="width:10%">Action</th><th style="width:10%">Reviewer Initials</th></tr></thead>
+      <tbody id="subBody"></tbody>
     </table></div>
+    <button class="btn sm no-print" id="addSubBtn">+ Add item</button>
+    <p class="note" style="font-style:normal;margin-top:8px">Action codes: NET = No Exceptions Taken (accepted, no comments) &nbsp;|&nbsp; AAN = Approved as Noted &nbsp;|&nbsp; R&amp;R = Revise and Resubmit &nbsp;|&nbsp; REJ = Rejected &nbsp;|&nbsp; FRO = For Record Only</p>
     <div class="field" style="margin:6px 0"><span class="lbl">Contractor Notes / Remarks</span><textarea class="ta"></textarea></div>
     <table class="form"><tr><th style="text-align:center">Review Action (Architect / Engineer)</th></tr>
       <tr><td>
         <div class="grid g2">
-          <div class="chkrow"><input type="checkbox"> No Exceptions Taken</div>
+          <div class="chkrow"><input type="checkbox"> No Exceptions Taken (accepted, no comments)</div>
           <div class="chkrow"><input type="checkbox"> Approved as Noted</div>
           <div class="chkrow"><input type="checkbox"> Revise and Resubmit</div>
           <div class="chkrow"><input type="checkbox"> Rejected</div>
@@ -427,6 +463,8 @@ table.est input:focus,table.est textarea:focus{outline:1px solid var(--blue);bac
       <div class="field"><span class="lbl">Completion Date</span><input class="f grow"></div>
     </div>
     <div class="field" style="margin-bottom:6px"><span class="lbl">Scope of Work Performed</span><textarea class="ta" style="min-height:110px"></textarea></div>
+    <p class="legal" style="margin-top:12px"><b>Acceptance and Release:</b> By signing below, the Customer confirms that the work described above has been completed and inspected, and accepts it as complete. The Customer releases Finesse Construction LLC from any further claims, complaints, or requests for rework concerning the work described above for any condition that was visible or reasonably discoverable at the time of inspection.</p>
+    <p class="legal"><b>What this release does not affect:</b> (a) any written warranty provided under the contract; (b) defects that were not visible or reasonably discoverable at the time of inspection; and (c) any right that cannot be waived under applicable law. Any balance due under the contract remains payable according to its terms.</p>
     <div class="grid g2" style="margin-top:22px">
       <div><div class="sigline" style="margin-bottom:26px"><input class="f grow" data-proj="poc" style="border:none">FC Representative Overseeing Project</div><div class="sigline">FC Representative Signature</div></div>
       <div><div class="sigline" style="margin-bottom:26px">Customer Printed Name</div><div class="sigline">Customer Signature</div><div style="height:24px"></div><div class="sigline" style="width:60%">Date</div></div>
@@ -443,11 +481,12 @@ table.est input:focus,table.est textarea:focus{outline:1px solid var(--blue);bac
       <div class="field"><span class="lbl">Date</span><input class="f grow today"></div>
       <div class="field"><span class="lbl">Prepared By</span><input class="f grow" data-proj="poc"></div>
     </div>
-    <div class="tscroll"><table class="form">
-      <tr><th style="width:8%">#</th><th style="width:20%">Location / Room</th><th>Description</th><th style="width:16%">Trade</th><th style="width:12%">Status</th><th style="width:12%">Done</th></tr>
+    <div class="tscroll"><table class="form split">
+      <thead><tr><th style="width:8%">#</th><th style="width:20%">Location / Room</th><th>Description</th><th style="width:16%">Trade</th><th style="width:12%">Status</th><th style="width:12%">Done</th></tr></thead>
       <tbody id="punchBody"></tbody>
     </table></div>
     <button class="btn sm no-print" id="addPunchBtn" style="margin-top:8px">+ Add item</button>
+    <p class="legal" style="margin-top:14px"><b>Punch List Terms:</b> This list includes every item the Owner identified as incomplete or requiring correction at the inspection on the date above. Finesse Construction LLC will complete or correct the listed items. All other work is accepted as of the inspection date, subject to the warranty provided under the contract. Items that were visible or reasonably discoverable at the inspection but are not listed here may be added only by written agreement of both parties. Open punch items do not delay payment of amounts otherwise due, except as the contract provides.</p>
     <div class="sigwrap two" style="margin-top:22px">
       <div><div class="sigslot"></div><div class="sigline"><input class="f grow" data-proj="poc" style="border:none">Inspected By — Finesse</div></div>
       <div><div class="sigslot"></div><div class="sigline">Accepted By / Date</div></div>
@@ -472,8 +511,8 @@ table.est input:focus,table.est textarea:focus{outline:1px solid var(--blue);bac
       <div><div class="sigslot"></div><div class="sigline"><input class="f" data-proj="poc" style="border:none;width:90%">Finesse Supervisor — Signature / Date</div></div>
     </div>
     <p class="lbl" style="margin-top:20px">Issues List</p>
-    <div class="tscroll"><table class="form">
-      <tr><th style="width:18%">Issue ID</th><th>Issue Description</th><th style="width:22%">Status</th></tr>
+    <div class="tscroll"><table class="form split">
+      <thead><tr><th style="width:18%">Issue ID</th><th>Issue Description</th><th style="width:22%">Status</th></tr></thead>
       <tbody id="issueBody"></tbody>
     </table></div>
     <button class="btn sm no-print" id="addIssueBtn" style="margin-top:8px">+ Add issue</button>
@@ -513,8 +552,9 @@ table.est input:focus,table.est textarea:focus{outline:1px solid var(--blue);bac
       <tbody id="estBody"></tbody>
     </table>
     <button class="btn sm no-print" id="addRowBtn" style="margin-top:8px">+ Add line</button>
-    <div class="est-total">Total Due: <b id="estTotal">$0.00</b></div>
-    <p class="legal" style="margin-top:10px;color:var(--muted)">Thank you for your business.</p>
+    <div class="est-total">Estimated Total: <b id="estTotal">$0.00</b></div>
+    <p class="legal" style="margin-top:14px"><b>Estimate Only — Not a Contract:</b> This estimate is provided for budgeting purposes only. It is not a contract, bid, or guaranteed price, and it creates no obligation for either party. It is based on the information available on the date above and is subject to change and correction after site verification, final scope, engineering, permitting, and current material and labor pricing. Work not specifically listed is excluded. Pricing is valid for 30 days from the date above. Work will proceed only under a written agreement signed by both parties.</p>
+    <p class="legal" style="color:var(--muted)">Thank you for the opportunity.</p>
   </section>
 </div>
 
@@ -582,13 +622,13 @@ sheets.forEach((s,i)=>{
   b.className="tab"+(i===0?" active":"");
   b.textContent=s.dataset.title;
   b.onclick=()=>{document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));b.classList.add("active");
-    sheets.forEach(x=>x.classList.remove("active"));s.classList.add("active");window.scrollTo({top:0,behavior:"smooth"});docTitle();};
+    sheets.forEach(x=>x.classList.remove("active"));s.classList.add("active");window.scrollTo({top:0,behavior:"smooth"});docTitle();if(window.fitAll){fitAll(s);schedulePB();}};
   tabsEl.appendChild(b);
   if(i===0)s.classList.add("active");
 });
 
 const today=new Date().toLocaleDateString("en-US");
-function setToday(root){root.querySelectorAll("input.today").forEach(el=>{if(!el.value)el.value=today;});}
+function setToday(root){root.querySelectorAll(".today").forEach(el=>{if(!el.value)el.value=today;});if(window.fitAll)fitAll(root);}
 setToday(document);
 
 function docTitle(){
@@ -608,6 +648,7 @@ function applyProject(root){
   root=root||document;
   const p=currentProject();if(!p)return;
   root.querySelectorAll("[data-proj]").forEach(el=>{const v=projValue(p,el.dataset.proj);if(v)el.value=v;});
+  if(window.fitAll)fitAll(root);
 }
 function stateFromProject(){
   const p=currentProject();if(!p)return null;
@@ -719,7 +760,7 @@ function addPunch(){
   const tr=document.createElement("tr");
   tr.innerHTML='<td>'+n+'</td><td><input class="f grow"></td><td><input class="f grow"></td>'+
     '<td><input class="f grow"></td><td><input class="f grow"></td><td><input class="f grow"></td>';
-  punchBody.appendChild(tr);
+  punchBody.appendChild(tr);upgradeFields(tr);fitAll(tr);
 }
 for(let i=0;i<8;i++)addPunch();
 document.getElementById("addPunchBtn").onclick=addPunch;
@@ -729,10 +770,20 @@ const issueBody=document.getElementById("issueBody");
 function addIssue(){
   const tr=document.createElement("tr");
   tr.innerHTML='<td><input class="f grow"></td><td><input class="f grow"></td><td><input class="f grow"></td>';
-  issueBody.appendChild(tr);
+  issueBody.appendChild(tr);upgradeFields(tr);fitAll(tr);
 }
 for(let i=0;i<4;i++)addIssue();
 document.getElementById("addIssueBtn").onclick=addIssue;
+
+/* ---- submittal items ---- */
+const subBody=document.getElementById("subBody");
+function addSub(){
+  const tr=document.createElement("tr");
+  tr.innerHTML='<td><input class="f grow"></td><td><input class="f grow"></td><td><input class="f grow"></td><td><input class="f grow"></td><td><input class="f grow"></td><td><input class="f grow"></td>';
+  subBody.appendChild(tr);upgradeFields(tr);fitAll(tr);
+}
+for(let i=0;i<4;i++)addSub();
+document.getElementById("addSubBtn").onclick=addSub;
 
 /* ---- lien waivers ---- */
 function bl(w,dp){return '<input class="f'+(dp?'" data-proj="'+dp:'')+'" style="width:'+w+'px">';}
@@ -816,6 +867,137 @@ document.getElementById("wState").onchange=renderWaiver;
 document.getElementById("wType").onchange=renderWaiver;
 renderWaiver();
 
+/* ---- fields that wrap / shrink instead of cutting off ---- */
+function upgradeFields(root){
+  root.querySelectorAll("input.f.grow:not(.today)").forEach(inp=>{
+    const t=document.createElement("textarea");
+    for(const a of inp.attributes){if(a.name!=="type"&&a.name!=="value")t.setAttribute(a.name,a.value);}
+    t.rows=1;t.value=inp.value;
+    const nx=inp.nextSibling;
+    inp.replaceWith(t);
+    if(nx&&nx.nodeName==="BR")nx.remove();
+  });
+}
+function fitEl(el){
+  if(!el||el.offsetParent===null)return;
+  if(el.tagName==="TEXTAREA"){
+    const chrome=el.offsetHeight-el.clientHeight;
+    if(el.classList.contains("f")){el.style.height="auto";el.style.height=(el.scrollHeight+chrome)+"px";}
+    else if(el.classList.contains("ta")||el.classList.contains("desc")){
+      /* grow only, so a box the user enlarged for handwritten notes keeps its size */
+      if(el.scrollHeight>el.clientHeight+1)el.style.height=(el.scrollHeight+chrome+2)+"px";
+    }
+  }else if(el.tagName==="INPUT"&&el.classList.contains("f")){
+    if(el.dataset.w===undefined)el.dataset.w=el.style.width||"";
+    el.style.fontSize="";el.style.width=el.dataset.w;
+    if(el.scrollWidth<=el.clientWidth+1)return;
+    if(!el.classList.contains("grow")){
+      const room=el.parentElement.clientWidth-8;
+      const need=el.scrollWidth+(el.offsetWidth-el.clientWidth)+6;
+      el.style.width=Math.max(el.offsetWidth,Math.min(need,room))+"px";
+    }
+    let fs=parseFloat(getComputedStyle(el).fontSize);
+    while(el.scrollWidth>el.clientWidth+1&&fs>8){fs-=.5;el.style.fontSize=fs+"px";}
+  }
+}
+function fitAll(root){
+  (root||document).querySelectorAll("textarea.f,textarea.ta,textarea.desc,input.f").forEach(fitEl);
+}
+upgradeFields(document);
+document.addEventListener("input",e=>{fitEl(e.target);schedulePB();});
+
+/* ---- page-break preview ---- */
+const PX_IN=96, PAGE_H=(11-.9)*PX_IN;   /* letter, .45in top/bottom margins */
+const AVOID="table.form:not(.split),table.form.split tbody tr,.notice,.wtitle,.sigwrap>div,.sigline,table.est tr,.chkrow";
+let pbQueued=false;
+function schedulePB(){
+  if(!document.body.classList.contains("pv")||pbQueued)return;
+  pbQueued=true;requestAnimationFrame(()=>{pbQueued=false;drawBreaks();});
+}
+function clearBreaks(){
+  document.querySelectorAll(".pbreak").forEach(e=>e.remove());
+  document.querySelectorAll(".pb-moved").forEach(e=>e.classList.remove("pb-moved"));
+}
+function drawBreaks(){
+  clearBreaks();
+  const sheet=document.querySelector(".sheet.active"),cnt=document.getElementById("pbCount");
+  if(!sheet||!document.body.classList.contains("pv")){cnt.textContent="";return;}
+  const sr=sheet.getBoundingClientRect(), pad=parseFloat(getComputedStyle(sheet).paddingTop);
+  /* screen-only controls take space on screen but not on paper: map screen y <-> print y */
+  const np=[...sheet.querySelectorAll(".no-print")].filter(e=>e.offsetParent!==null&&!e.parentElement.closest(".no-print"))
+    .map(e=>{const r=e.getBoundingClientRect(),cs=getComputedStyle(e),mt=parseFloat(cs.marginTop)||0,mb=parseFloat(cs.marginBottom)||0;
+      return {top:r.top-sr.top-mt,h:r.height+mt+mb};}).sort((a,b)=>a.top-b.top);
+  const toPrint=y=>{let d=0;for(const b of np){if(b.top+b.h<=y)d+=b.h;else if(b.top<y)d+=y-b.top;}return y-d;};
+  const toScreen=p=>{let acc=0;for(const b of np){if(b.top-acc<=p)acc+=b.h;else break;}return p+acc;};
+  const inSheet=e=>e.offsetParent!==null&&!e.closest(".no-print");
+  const blocks=[...sheet.querySelectorAll(AVOID)].filter(inSheet).map(e=>{const r=e.getBoundingClientRect();
+    return {el:e,top:toPrint(r.top-sr.top),bot:toPrint(r.bottom-sr.top)};});
+  const forced=[...sheet.querySelectorAll(".pbf,#rfiResponse")].filter(inSheet).map(e=>toPrint(e.getBoundingClientRect().top-sr.top)).sort((a,b)=>a-b);
+  let end=0;[...sheet.children].filter(inSheet).forEach(c=>{end=Math.max(end,c.getBoundingClientRect().bottom-sr.top);});
+  end=toPrint(end);
+  const breaks=[];let start=pad,guard=0;
+  while(guard++<40){
+    let limit=start+PAGE_H, f=forced.find(y=>y>start+1&&y<limit);
+    if(f!==undefined){breaks.push({y:f,why:"forced"});start=f;continue;}
+    if(limit>=end-1)break;
+    let brk=limit,moved=null;
+    for(const b of blocks){
+      if(b.top<limit-1&&b.bot>limit+1&&b.top>start+1&&(b.bot-b.top)<PAGE_H&&b.top<brk){brk=b.top;moved=b.el;}
+    }
+    if(moved&&moved.closest("table.split"))moved=null;
+    breaks.push({y:brk,why:moved?"moved":"",el:moved});start=brk;
+    /* a split table repeats its header row on the next page */
+    const hdr=[...sheet.querySelectorAll("table.split")].find(t=>{const r=t.getBoundingClientRect(),tp=toPrint(r.top-sr.top),bt=toPrint(r.bottom-sr.top);return tp<brk&&bt>brk;});
+    if(hdr){const h=hdr.tHead?hdr.tHead.getBoundingClientRect().height:0;start=brk-h;}
+  }
+  breaks.forEach((b,i)=>{
+    const line=document.createElement("div");line.className="pbreak";
+    line.style.top=toScreen(b.y)+"px";
+    const lab=document.createElement("span");
+    lab.textContent="Page "+(i+2)+(b.why==="forced"?" — manual break":b.why==="moved"?" — outlined block moves here to stay in one piece":"");
+    line.appendChild(lab);sheet.appendChild(line);
+    if(b.el)b.el.classList.add("pb-moved");
+  });
+  const n=breaks.length+1;cnt.textContent=n+(n===1?" page":" pages");
+}
+/* manual page breaks: hover a block in preview, click to start a new page there */
+const pbBtn=document.createElement("button");pbBtn.id="pbBtn";pbBtn.type="button";pbBtn.className="no-print";
+document.querySelector(".workspace").appendChild(pbBtn);
+let pbTarget=null;
+document.querySelector(".workspace").addEventListener("mousemove",e=>{
+  if(!document.body.classList.contains("pv")||e.target===pbBtn)return;
+  const sheet=e.target.closest(".sheet.active");
+  if(!sheet){pbBtn.style.display="none";pbTarget=null;return;}
+  let el=e.target;while(el&&el.parentElement!==sheet)el=el.parentElement;
+  if(!el||el.classList.contains("lh")||el.classList.contains("no-print")||el.classList.contains("pbreak")||el===sheet.firstElementChild){pbBtn.style.display="none";pbTarget=null;return;}
+  pbTarget=el;
+  const ws=document.querySelector(".workspace").getBoundingClientRect(),r=el.getBoundingClientRect(),sr=sheet.getBoundingClientRect();
+  pbBtn.textContent=el.classList.contains("pbf")?"Remove page break":"New page here";
+  pbBtn.style.display="block";
+  pbBtn.style.top=(r.top-ws.top)+"px";
+  pbBtn.style.left=Math.max(4,(sr.left-ws.left)-pbBtn.offsetWidth-8)+"px";
+});
+pbBtn.onclick=()=>{if(pbTarget){pbTarget.classList.toggle("pbf");pbBtn.textContent=pbTarget.classList.contains("pbf")?"Remove page break":"New page here";drawBreaks();}};
+document.querySelector(".workspace").style.position="relative";
+
+const pvBtn=document.getElementById("pvToggle");
+function setPV(on){
+  document.body.classList.toggle("pv",on);pvBtn.classList.toggle("on",on);
+  pvBtn.textContent=on?"Hide page breaks":"Show page breaks";
+  if(!on){clearBreaks();pbBtn.style.display="none";}
+  fitAll(document.querySelector(".sheet.active")||document);
+  if(on)drawBreaks();
+  store.set("finesse_pv",on);
+}
+pvBtn.onclick=()=>setPV(!document.body.classList.contains("pv"));
+["click","mouseup","keyup"].forEach(t=>document.addEventListener(t,()=>schedulePB()));
+window.addEventListener("resize",()=>{fitAll(document.querySelector(".sheet.active"));schedulePB();});
+setInterval(()=>{if(document.body.classList.contains("pv"))drawBreaks();},1500);
+window.addEventListener("beforeprint",()=>{clearBreaks();pbBtn.style.display="none";});
+window.addEventListener("afterprint",schedulePB);
+setPV(!!store.get("finesse_pv"));
+fitAll(document.querySelector(".sheet.active")||document);
+
 /* ---- actions ---- */
 document.getElementById("printBtn").onclick=()=>window.print();
 document.getElementById("resetBtn").onclick=()=>{
@@ -824,6 +1006,8 @@ document.getElementById("resetBtn").onclick=()=>{
   s.querySelectorAll("input,textarea").forEach(el=>{if(el.type==="checkbox")el.checked=false;else el.value="";});
   setToday(s);applyProject(s);
   if(s.id==="estimate")recalc();
+  s.querySelectorAll("textarea").forEach(t=>{if(!t.classList.contains("f"))t.style.height="";});
+  fitAll(s);schedulePB();
 };
 
 renderSelect();
