@@ -93,19 +93,27 @@
   @keyframes sp { to { transform:rotate(360deg); } }
   .foot { text-align:center; font-size:11px; color:var(--muted); padding:16px; }
   .print-head { display:none; }
+  /* PDF export layout: applied on screen while the PDF is built (mirrors the old print layout) */
+  body.pdfx { background:#fff; }
+  body.pdfx .header, body.pdfx .toolbar .refresh, body.pdfx .asof, body.pdfx .foot, body.pdfx .chev { display:none !important; }
+  body.pdfx .print-head { display:block; margin:0 0 14px; }
+  body.pdfx .print-head h1 { font-family:'Montserrat',sans-serif; font-size:17px; color:#1B2A4A; }
+  body.pdfx .print-head p { font-size:11px; color:#6b7c93; margin-top:3px; }
+  body.pdfx .week-select { border:none; padding:0; margin-top:2px; -webkit-appearance:none; appearance:none; color:#1B2A4A; }
+  body.pdfx .toolbar h2 { font-size:13px; }
+  body.pdfx .detail { display:block !important; }
+  body.pdfx .detail pre { max-height:none; overflow:visible; }
+  body.pdfx .cols { grid-template-columns:1fr !important; }
+  body.pdfx .kpis { grid-template-columns:repeat(4,1fr) !important; }
+  body.pdfx .wrap { width:7.5in; max-width:none; padding:0; margin:0; }
+  .pdf-sel { display:inline-block; font-size:13px; font-weight:600; color:#1B2A4A; margin-top:2px; }
+  #pdfBusy { position:fixed; inset:0; z-index:100; background:rgba(27,42,74,.88); color:#fff; display:none; align-items:center; justify-content:center; font:600 15px 'Open Sans',sans-serif; }
+  body.pdf-busy #pdfBusy { display:flex; }
+  /* Browser printing is disabled: browsers stamp the page URL/date in the margins. Use Download PDF. */
   @media print {
-    body { background:#fff; }
-    .header, .toolbar .refresh, .asof, .foot, .chev { display:none !important; }
-    .print-head { display:block; margin:0 0 14px; }
-    .print-head h1 { font-family:'Montserrat',sans-serif; font-size:17px; color:#1B2A4A; }
-    .print-head p { font-size:11px; color:#6b7c93; margin-top:3px; }
-    .week-select { border:none; padding:0; margin-top:2px; -webkit-appearance:none; appearance:none; color:#1B2A4A; }
-    .toolbar h2 { font-size:13px; }
-    .detail { display:block !important; }              /* include every report body in the PDF */
-    .detail pre { max-height:none; overflow:visible; }
-    .panel, .kpi, .row, .flag, .detail { break-inside:avoid; }
-    .cols { grid-template-columns:1fr; }               /* stack for a clean printed page */
-    .wrap { max-width:100%; padding:0; }
+    @page { size:letter; margin:0; }
+    body > * { display:none !important; }
+    body::before { content:"Printing from the browser is turned off. Use the Download PDF button, then print the PDF."; display:block; padding:1.5in 1in; font-size:16px; color:#1B2A4A; }
   }
   @media (max-width:640px){ .kpis{grid-template-columns:repeat(2,1fr)} .cols{grid-template-columns:1fr} }
 </style>
@@ -127,12 +135,14 @@
   </div>
 </div>
 
+<div id="pdfBusy" data-html2canvas-ignore="true">Building PDF…</div>
+
 <div id="app" style="display:none;">
   <div class="wrap">
     <div id="print-head" class="print-head"></div>
     <div class="toolbar">
       <div><h2>Weekly Report Dashboard</h2><select id="week-select" class="week-select" onchange="loadWeek(this.value)"></select></div>
-      <div><button class="refresh" onclick="reload()">↻ Refresh</button><button class="refresh" onclick="window.print()">⤓ Download PDF</button><span class="asof" id="asof"></span></div>
+      <div><button class="refresh" onclick="reload()">↻ Refresh</button><button class="refresh" id="pdfBtn" onclick="downloadPdf()">⤓ Download PDF</button><span class="asof" id="asof"></span></div>
     </div>
     <div id="content"><div class="state"><div class="spin"></div>Loading this week's reports…</div></div>
   </div>
@@ -262,6 +272,60 @@
       +'</div>';
   }
   function tog(i){ const d=document.getElementById('dt'+i), c=document.getElementById('cv'+i); if(!d) return; const o=d.classList.toggle('open'); if(c) c.textContent=o?'˅':'›'; }
+
+/* ---- Download PDF: built in the page (html2canvas + jsPDF), so no browser stamps the URL/date on it ---- */
+const PDF_LIBS=["https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js",
+                "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"];
+let pdfLibsP=null;
+function loadPdfLibs(){
+  if(window.html2canvas&&window.jspdf)return Promise.resolve();
+  if(!pdfLibsP)pdfLibsP=Promise.all(PDF_LIBS.map(src=>new Promise((ok,bad)=>{
+    const sc=document.createElement("script");sc.src=src;sc.onload=ok;sc.onerror=()=>bad(new Error("load "+src));document.head.appendChild(sc);
+  }))).catch(e=>{pdfLibsP=null;throw e;});
+  return pdfLibsP;
+}
+async function downloadPdf(){
+  const btn=document.getElementById("pdfBtn");if(btn.disabled)return;
+  const wrap=document.querySelector("#app .wrap");if(!wrap||wrap.offsetParent===null)return;
+  btn.disabled=true;document.body.classList.add("pdf-busy");
+  try{await loadPdfLibs();}
+  catch(e){document.body.classList.remove("pdf-busy");btn.disabled=false;alert("Couldn't load the PDF tool. Check your internet connection and try again.");return;}
+  const sx=window.scrollX,sy=window.scrollY;let undo=null;
+  try{
+    document.body.classList.add("pdfx");window.scrollTo(0,0);
+    const sel=document.getElementById("week-select");
+    if(sel){const sp=document.createElement("span");sp.className="pdf-sel";sp.textContent=sel.selectedOptions[0]?sel.selectedOptions[0].text:"";sel.replaceWith(sp);undo=()=>sp.replaceWith(sel);}
+    if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+    const PAGE_H=10*96, wr=wrap.getBoundingClientRect(), W=wr.width;
+    const blocks=[...wrap.querySelectorAll(".print-head,.toolbar,.kpis,.kpi,.panel,.panel-h,.row,.row-top,.mini-flags,.flag,.detail,.also,.allclear,pre")]
+      .filter(e=>e.offsetParent!==null).map(e=>{const r=e.getBoundingClientRect();return {top:r.top-wr.top,bot:r.bottom-wr.top};});
+    const end=wr.height,pages=[];let start=0,guard=0;
+    while(guard++<80){
+      const limit=start+PAGE_H;
+      if(limit>=end-1){pages.push([start,Math.max(end,start+1)]);break;}
+      let brk=limit;
+      for(const b of blocks){if(b.top<limit-1&&b.bot>limit+1&&b.top>start+1&&(b.bot-b.top)<PAGE_H&&b.top<brk)brk=b.top;}
+      pages.push([start,brk]);start=brk;
+    }
+    const scale=Math.min(2.5,Math.max(1.5,window.devicePixelRatio||2));
+    const {jsPDF}=window.jspdf;const pdf=new jsPDF({unit:"in",format:"letter",orientation:"portrait",compress:true});
+    for(let i=0;i<pages.length;i++){
+      const [y0,y1]=pages[i];if(i)pdf.addPage();
+      const c=await html2canvas(wrap,{scale,backgroundColor:"#ffffff",useCORS:true,logging:false,x:0,y:Math.floor(y0),width:Math.ceil(W),height:Math.max(1,Math.ceil(y1-y0))});
+      pdf.addImage(c.toDataURL("image/jpeg",.92),"JPEG",.5,.5,7.5,7.5*c.height/c.width,undefined,"FAST");
+      if(pages.length>1){pdf.setFontSize(8);pdf.setTextColor(107,124,147);pdf.text("Page "+(i+1)+" of "+pages.length,4.25,10.75,{align:"center"});}
+    }
+    const wk=sel&&sel.value?sel.value:"";
+    const name=("Finesse - Weekly Report"+(wk?" - "+wk:"")).replace(/[\\/:*?"<>|]+/g,"-");
+    pdf.setProperties({title:name,author:"Finesse Construction LLC",creator:"Finesse Construction LLC"});
+    pdf.save(name+".pdf");
+  }catch(e){console.error(e);alert("Something went wrong building the PDF. Please try again.");}
+  finally{
+    if(undo)undo();
+    document.body.classList.remove("pdfx","pdf-busy");window.scrollTo(sx,sy);btn.disabled=false;
+  }
+}
+document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&!e.altKey&&(e.key==="p"||e.key==="P")&&document.getElementById("app").style.display!=="none"){e.preventDefault();downloadPdf();}});
 </script>
 </body>
 </html>
